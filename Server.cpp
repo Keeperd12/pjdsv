@@ -81,7 +81,13 @@ void Server::ServerLoop(){
                 }
                 else
                 {
-                    std::cout << "message from client: " << message << "\n";
+                    message[valread] = '\0';
+                    std::cout << "message from client: "<< sd << " lengte valread van buffer is: " << valread << "  "<< message << "\n";
+                    if( send(sd, message, strlen(message), 0) != strlen(message) )
+                    {
+                        perror("send");
+                        }
+                    puts("bericht terug ge echoed");
                     /*
                      * handle the message in new thread
                      * so that we can listen to other client
