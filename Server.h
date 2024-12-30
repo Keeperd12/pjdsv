@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Client.h"
+
 #include <iostream>     // for cout/cerr
 #include <arpa/inet.h>  // for ip inet_pton()
 #include <netinet/in.h> // for address
@@ -7,6 +9,7 @@
 #include <sys/socket.h> // for socket
 #include <unistd.h>     // for close()
 #include <vector>       // for storing client
+#include <map>          //for storing clientfd with pointer object
 #include <string.h> 
 
 class Server
@@ -26,6 +29,7 @@ private:
     fd_set readfds;
     size_t valread;
     std::vector<int> clientList;
+    std::map<int, Client*> MapTypeClients; //lijst voor linker fd aan pointer van een client
     struct sockaddr_in serverAddr;
     char *welkomMessage = "He je bent verbonden!\r\n";
 };

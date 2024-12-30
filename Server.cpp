@@ -47,6 +47,27 @@ void Server::ServerLoop(){
             }
             // adding client to list
             clientList.push_back(clientSocket);
+            
+            //pair maken om toe tevoegen voor map
+            std::pair<int, Client*>TempToevoegenClient;
+            TempToevoegenClient.first=clientSocket;
+            TempToevoegenClient.second=new Client(clientSocket); //later geen type client maar een afgeleide hiervan
+            //voeg toe aan map
+            MapTypeClients.insert(TempToevoegenClient);
+
+            //zoek of nummer van fd in de lijst staat en roep funcie geefNummer aan en print dit dit zou het zelfde moeten zijn als de fd
+            auto it = MapTypeClients.find(clientSocket);
+            if(it !=MapTypeClients.end()){
+                std::cout << it->second->GeefNummer() << std::endl;
+            }
+
+            //retouneer alle key values van de map
+            for(auto it : MapTypeClients){
+                std::cout << it << std::endl;
+            }
+
+
+
             std::cout << "new client connected\n";
             std::cout << "new connection, socket fd is " << clientSocket << ", ip is: "
                       << inet_ntoa(serverAddr.sin_addr) << ", port: " << ntohs(serverAddr.sin_port) << "\n";
