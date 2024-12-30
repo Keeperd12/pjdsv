@@ -2,7 +2,7 @@
 
 Server::Server(int poortNmr, char *Ip, int Backlog) : poort(poortNmr), ip(Ip), backlog(Backlog), opt(1)
 {
-    std::cout<< "Object gemaakt" << std::endl;
+    std::cout << "Object gemaakt" << std::endl;
     ServerSetup();
     ServerLoop();
 }
@@ -10,76 +10,133 @@ Server::Server(int poortNmr, char *Ip, int Backlog) : poort(poortNmr), ip(Ip), b
 Server::~Server()
 {
 }
-void Server::ServerLoop(){
-    while(true){
-        std::cout << "waiting for activity\n" << std::endl;
-        //maak de readfds leeg
+
+int Server::stuurAck(int fd)
+{
+    if (send(fd, ackMessage, strlen(ackMessage), 0) != strlen(ackMessage))
+    {
+        return 1; // return succesvol
+    }
+    return 0; // return onsuccesvol
+}
+int Server::leesType(int fd)
+{
+    char messages[1024];
+    // lees het bericht uit
+    valread = read(fd, messages, 1024);
+    messages[valread] = '\0';
+    if(strcmp(messages, "Muur") == 0){
+        //het is een muur
+        std::cout << "De client is een muur" << std::endl;
+        //maak een muur aan
+        std::pair<int, Client *> TempToevoegenClient;
+        TempToevoegenClient.first = fd;
+        TempToevoegenClient.second = new Muur(fd, 1); //object aangemaakt van de muur
+        // voeg toe aan map
+        MapTypeClients.insert(TempToevoegenClient);
+        return 1;
+    }
+    if(strcmp(messages, "Schemerlamp") == 0){
+        //het is een Schemerlamp
+         std::cout << "De client is een Schemerlamp" << std::endl;
+         return 1;
+    }
+    if(strcmp(messages, "Deur") == 0){
+        //het is een Deur
+         std::cout << "De client is een Deur" << std::endl;
+         return 1;
+    }
+    if(strcmp(messages, "Zuil") == 0){
+        //het is een zuil
+         std::cout << "De client is een Zuil "<< std::endl;
+         return 1;
+    }
+}
+int Server::leesAck(int fd)
+{
+    char messages[1024];
+    // lees het bericht uit
+    valread = read(fd, messages, 1024);
+    messages[valread] = '\0';
+    sleep(1);
+    if (strcmp(messages, "ACK") == 0)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+void Server::ServerLoop()
+{
+    while (true)
+    {
+        std::cout << "waiting for activity\n"<< std::endl;
+        // maak de readfds leeg
         FD_ZERO(&readfds);
-        //voeg de master socket toe aan de readfds set
+        // voeg de master socket toe aan de readfds set
         FD_SET(masterSocket, &readfds);
         maxfd = masterSocket;
-        //kopieer de clientlist naar de readfds
-        //zodat we naar alle client kunnen luisteren
-        for(auto sd : clientList){
+        // kopieer de clientlist naar de readfds
+        // zodat we naar alle client kunnen luisteren
+        for (auto sd : clientList)
+        {
             FD_SET(sd, &readfds);
-            if(sd > maxfd){
+            if (sd > maxfd)
+            {
                 maxfd = sd;
             }
         }
-        //check nog eens
+        // check nog eens
         if (sd > maxfd)
         {
             maxfd = sd;
         }
-        //gebruik select om te luisteren naar meedere clients
+        // gebruik select om te luisteren naar meedere clients
         activity = select(maxfd + 1, &readfds, NULL, NULL, NULL);
         if (activity < 0)
         {
-            std::cerr << "select error\n"<< std::endl;
+            std::cerr << "select error\n"
+                      << std::endl;
         }
-        //wanneer er iets met de master socket gebeurt is er een niew connectie request
+        // wanneer er iets met de master socket gebeurt is er een niew connectie request
         if (FD_ISSET(masterSocket, &readfds))
         {
             clientSocket = accept(masterSocket, (struct sockaddr *)NULL, NULL);
+            // error handeling
             if (clientSocket < 0)
             {
                 std::cerr << "accept error\n";
             }
+
             // adding client to list
             clientList.push_back(clientSocket);
-            
-            //pair maken om toe tevoegen voor map
-            std::pair<int, Client*>TempToevoegenClient;
-            TempToevoegenClient.first=clientSocket;
-            TempToevoegenClient.second=new Client(clientSocket); //later geen type client maar een afgeleide hiervan
-            //voeg toe aan map
-            MapTypeClients.insert(TempToevoegenClient);
 
-            //zoek of nummer van fd in de lijst staat en roep funcie geefNummer aan en print dit dit zou het zelfde moeten zijn als de fd
-            auto it = MapTypeClients.find(clientSocket);
-            if(it !=MapTypeClients.end()){
-                std::cout << it->second->GeefNummer() << std::endl;
-            }
-
-            //retouneer alle key values van de map
-            for(auto it : MapTypeClients){
-                std::cout << it << std::endl;
-            }
-
-
-
-            std::cout << "new client connected\n";
-            std::cout << "new connection, socket fd is " << clientSocket << ", ip is: "
-                      << inet_ntoa(serverAddr.sin_addr) << ", port: " << ntohs(serverAddr.sin_port) << "\n";
-            //welkom de client
-            if( send(clientSocket, welkomMessage, strlen(welkomMessage), 0) != strlen(welkomMessage) ) 
+            // welkomst bericht dat de client zich moet identificeren
+            if (send(clientSocket, welkomMessage, strlen(welkomMessage), 0) != strlen(welkomMessage))
             {
                 perror("send");
             }
-              
-            puts("Welcome message sent successfully");
+
+            //lees het type uit van de socket en maak hiervan een object
+            //plaat socketverbinding met pointer naar het object in map
+            leesType(clientSocket);
+
+            // zoek of nummer van fd in de lijst staat en roep funcie geefNummer aan en print dit dit zou het zelfde moeten zijn als de fd
+            auto it = MapTypeClients.find(clientSocket);
+            if (it != MapTypeClients.end())
+            {
+                std::cout << "Dit is het type client: " << it->second->GeefType() << std::endl;
+                std::cout << "Dit is de FD van de client " << it->second->GeefFD() << std::endl;
+            }
+
+            // hier verder gaan volgende keer -> vervang de list voor een map met een pair van fds voor socketverbinding en de pointer naar het client object
+            // zodat er nog maar een lijst is. Let op er is nog niets gedaan met de authenticatie tussen de client en server
+            // Dit is los van daarvan
         }
-        //wanneer we iets willen ontvangen van een client dit nog in functie zetten
+        // wanneer we iets willen ontvangen van een client dit nog in functie zetten
         char message[1024];
         for (int i = 0; i < clientList.size(); ++i)
         {
@@ -103,11 +160,11 @@ void Server::ServerLoop(){
                 else
                 {
                     message[valread] = '\0';
-                    std::cout << "message from client: "<< sd << " lengte valread van buffer is: " << valread << "  "<< message << "\n";
-                    if( send(sd, message, strlen(message), 0) != strlen(message) )
+                    std::cout << "message from client: " << sd << " lengte valread van buffer is: " << valread << "  " << message << "\n";
+                    if (send(sd, message, strlen(message), 0) != strlen(message))
                     {
                         perror("send");
-                        }
+                    }
                     puts("bericht terug ge echoed");
                     /*
                      * handle the message in new thread
@@ -122,29 +179,32 @@ void Server::ServerLoop(){
         }
     }
 }
-void Server::ServerSetup(){
-    //creeer de master socket
-    if((masterSocket = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+
+void Server::ServerSetup()
+{
+    // creeer de master socket
+    if ((masterSocket = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
         perror("Socket failed");
         exit(EXIT_FAILURE);
     }
     else
     {
-        std::cout<<"Socket created\n" << std::endl;
+        std::cout << "Socket created\n"
+                  << std::endl;
     }
-    //zet het server addres
+    // zet het server addres
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(poort);
     inet_pton(AF_INET, ip, &serverAddr.sin_addr);
-    //bind de socket 
-    if (bind(masterSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr))<0) 
+    // bind de socket
+    if (bind(masterSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0)
     {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
     printf("Listener on port %d \n", poort);
-    //10 maximun aantal socketverbindingen tergelijkertijd
+    // 10 maximun aantal socketverbindingen tergelijkertijd
     if (listen(masterSocket, 10) < 0)
     {
         perror("listen");
@@ -152,6 +212,6 @@ void Server::ServerSetup(){
     }
     else
     {
-        std::cout<< "De server is nu aan het luisteren" << std::endl;
+        std::cout << "De server is nu aan het luisteren" << std::endl;
     }
 }

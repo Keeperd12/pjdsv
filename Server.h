@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Client.h"
+
 
 #include <iostream>     // for cout/cerr
 #include <arpa/inet.h>  // for ip inet_pton()
@@ -12,6 +12,8 @@
 #include <map>          //for storing clientfd with pointer object
 #include <string.h> 
 
+#include "Muur.h" //include de muur
+
 class Server
 {
 public:
@@ -21,6 +23,9 @@ public:
     ~Server();
 
 private:
+    int leesAck(int fd);
+    int stuurAck(int fd);
+    int leesType(int fd);
     const int poort;
     const char *ip;
     const int backlog;
@@ -31,7 +36,8 @@ private:
     std::vector<int> clientList;
     std::map<int, Client*> MapTypeClients; //lijst voor linker fd aan pointer van een client
     struct sockaddr_in serverAddr;
-    char *welkomMessage = "He je bent verbonden!\r\n";
+    char *welkomMessage = "Identificeer jezelf!";
+    char *ackMessage = "ACK";
 };
 
 
