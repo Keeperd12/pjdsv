@@ -54,6 +54,12 @@ int Server::leesType(int fd)
     {
         // het is een Schemerlamp
         std::cout << "De client is een Schemerlamp" << std::endl;
+        //Aanmaken van een Schemerlamp object.
+        std::pair<int, Client*> TempToevoegenClient; //Het binden van de unieke fd per object aan de pointer naar het client object.
+        TempToevoegenClient.first = fd; //Het eerste lid van de pair gelijkzetten aan de unieke fd.
+        //Het daadwerkelijk aanmaken van de Schemerlamp op de heap door het aanroepen van de constructor, wat resulteert in de pointer dat het tweede lid van de pair is.
+        TempToevoegenClient.second = new Schemerlamp(fd, 1); 
+        MapTypeClients.insert(TempToevoegenClient); //Nieuwe schemerlamp toevoegen aan de clients map via insert
         return 1;
     }
     if (strcmp(messages, "Deur") == 0)
