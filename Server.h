@@ -12,7 +12,7 @@
 #include <map>          //for storing clientfd with pointer object
 #include <string.h> 
 
-#include "Muur.h" //include de muur
+#include "Zuil.h" //include de muur
 
 class Server
 {
@@ -26,6 +26,7 @@ private:
     int leesAck(int fd);
     int stuurAck(int fd);
     int leesType(int fd);
+    void VerwerkDataZuil(Client *client, char *message);
     const int poort;
     const char *ip;
     const int backlog;
@@ -39,5 +40,3 @@ private:
     char *welkomMessage = "Identificeer jezelf!";
     char *ackMessage = "ACK";
 };
-
-

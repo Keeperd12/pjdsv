@@ -13,5 +13,3 @@ private:
     int clientFD;
     int type;
 };
-
-
