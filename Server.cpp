@@ -202,17 +202,26 @@ void Server::ServerLoop()
                     if (it != MapTypeClients.end())
                     {
 
-                        Client *client = it->second;
+                        Client* client = it->second;
                         int type = client->GeefType();
                         if (type == 4) // Zuil
                         {
                             std::cout << " Zuil gekoppeld aan bericht van zuil" << std::endl;
-                            Zuil *zuil = dynamic_cast<Zuil *>(client);
-                            VerwerkDataZuil(client, message); // Pass the client object
-                            if (zuil)
-                            {
-                                std::cout << "Dit is de button waarde: " << zuil->GetValueButton() << std::endl;
-                                std::cout << "Dit is de Brandmelder waarde: " << zuil->GetValueBrandmelder() << std::endl;
+
+                            stuurAck(client->GeefFD());
+                            std::cout << message << "\n";
+                            Zuil* zuil = dynamic_cast<Zuil *>(client);
+
+                            
+                                if (!zuil)
+                                {
+                                    std::cerr << "Dynamic cast naar Zuil mislukt. Controleer of client een Zuil-object is." << std::endl;
+                                    return;
+                                }
+                            else{
+                            VerwerkDataZuil (client, message);
+                            std::cout << " Waarde Button " << zuil->GetValueButton() << std::endl;
+                            std::cout << " Waarde Brandmelder " << zuil->GetValueBrandmelder() << std::endl;
                             }
                         }
                     }
@@ -247,6 +256,7 @@ void Server::VerwerkDataZuil(Client *client, char *message)
         int buttonValue = atoi(message); // Converteer string naar integer
         zuil->SetWaarde(buttonValue);
     }
+   
 }
 
 void Server::ServerSetup()
