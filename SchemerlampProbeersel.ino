@@ -4,7 +4,6 @@
 #include <ESP8266mDNS.h> //IIRC this could be used to track a hostname instead of a constantly changing IP address.
 #include <FastLED.h>  //Version 3.3.0 installed to not run into certain problems like last time.
 
-
 void UpdateHandler(); //Een functie die alleen naar de server schrijft bij statuswijzingen.
 void MovementHandler(); //Afhandelen van bewegingsregistratie.
 int RegistrateMovement(); //Registrating movement when someone enters the appartment, for the signal to the security.
@@ -76,7 +75,6 @@ void setup()
   prevMovement = RegistrateMovement();
 }
 
-
 void loop() 
 {
   if(!client.connected()){
@@ -108,8 +106,8 @@ void loop()
     delay(800);
 
     //MovementHandler(); //Volgens is MovementHandler volledig in functionaliteit onderdanig aan UpdateHandler nu.
-    ToggleLamp(); 
     UpdateHandler();  
+    ToggleLamp(); 
   }
   //delay(100); 
 }
@@ -134,9 +132,7 @@ void UpdateHandler()
 
   // Checking the lamp state, only a status change from the lamp should lead to a message to the server.
   if (lampState != prevLampState) 
-  {
-    ToggleLamp();
-    
+  {   
     if (lampState == 1) 
     {
       client.print("Lamp is turned on");
@@ -146,24 +142,10 @@ void UpdateHandler()
     {
       client.print("Lamp is turned off");
       Serial.println("Data has been sent, lamp is turned off.");
-    }
+    }   
     Serial.println(lampState);
     prevLampState = lampState; //De verandering opslaan als de nieuwe waarde om mee te vergelijken.
   }
-}
-
-void MovementHandler() // Afhandelen van bewegingsregistratie
-{
-  int newMovement = RegistrateMovement();
-  //Serial.println(newMovement);
-
-  if(newMovement != prevMovement)
-  {
-    Serial.println("Movement state changed. Someone is home!");
-    prevMovement = newMovement;
-  }
-  else
-    Serial.println("Nothing suspicious.");  
 }
 
 void ToggleLamp()
@@ -202,4 +184,18 @@ void TurnLampOff()
 {
   FastLED.setBrightness(0); //Brightness of 0 is the same as the lamp being turned off.
   FastLED.show(); //Portray the lamp being turned off.
+}
+
+void MovementHandler() // Afhandelen van bewegingsregistratie
+{
+  int newMovement = RegistrateMovement();
+  //Serial.println(newMovement);
+
+  if(newMovement != prevMovement)
+  {
+    Serial.println("Movement state changed. Someone is home!");
+    prevMovement = newMovement;
+  }
+  else
+    Serial.println("Nothing suspicious.");  
 }
