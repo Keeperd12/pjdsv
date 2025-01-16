@@ -9,6 +9,7 @@ Server::Server(int poortNmr, char *Ip, int Backlog) : poort(poortNmr), ip(Ip), b
 
 Server::~Server()
 {
+    close(masterSocket);
 }
 
 int Server::stuurAck(int fd)
@@ -53,20 +54,27 @@ int Server::leesType(int fd)
     if (strcmp(messages, "Schemerlamp") == 0)
     {
         // het is een Schemerlamp
-        /*std::cout << "De client is een Schemerlamp" << std::endl;
-        //Aanmaken van een Schemerlamp object.
-        std::pair<int, Client*> TempToevoegenClient; //Het binden van de unieke fd per object aan de pointer naar het client object.
-        TempToevoegenClient.first = fd; //Het eerste lid van de pair gelijkzetten aan de unieke fd.
-        //Het daadwerkelijk aanmaken van de Schemerlamp op de heap door het aanroepen van de constructor, wat resulteert in de pointer dat het tweede lid van de pair is.
-        TempToevoegenClient.second = new Schemerlamp(fd, 1);
-        MapTypeClients.insert(TempToevoegenClient);*/
+        std::cout << "De client is een Schemerlamp" << std::endl;
+        // Aanmaken van een Schemerlamp object.
+        std::pair<int, Client *> TempToevoegenClient; // Het binden van de unieke fd per object aan de pointer naar het client object.
+        TempToevoegenClient.first = fd;               // Het eerste lid van de pair gelijkzetten aan de unieke fd.
+        // Het daadwerkelijk aanmaken van de Schemerlamp op de heap door het aanroepen van de constructor, wat resulteert in de pointer dat het tweede lid van de pair is.
+        TempToevoegenClient.second = new Schemerlamp(fd, 2);
+        MapTypeClients.insert(TempToevoegenClient);
         // Nieuwe schemerlamp toevoegen aan de clients map via insert
         return 1;
     }
     if (strcmp(messages, "Deur") == 0)
     {
-        // het is een Deur
+        // het is een Deur // het is een Deur
         std::cout << "De client is een Deur" << std::endl;
+        // Aanmaken van een Schemerlamp object.
+        std::pair<int, Client *> TempToevoegenClient; // Het binden van de unieke fd per object aan de pointer naar het client object.
+        TempToevoegenClient.first = fd;               // Het eerste lid van de pair gelijkzetten aan de unieke fd.
+        // Het daadwerkelijk aanmaken van de Schemerlamp op de heap door het aanroepen van de constructor, wat resulteert in de pointer dat het tweede lid van de pair is.
+        TempToevoegenClient.second = new Deur(fd, 3);
+        MapTypeClients.insert(TempToevoegenClient);
+        // Nieuwe schemerlamp toevoegen aan de clients map via insert
         return 1;
     }
     if (strcmp(messages, "Zuil") == 0)
@@ -77,6 +85,19 @@ int Server::leesType(int fd)
         std::pair<int, Client *> TempToevoegenClient;
         TempToevoegenClient.first = fd;
         TempToevoegenClient.second = new Zuil(fd, 4); // object aangemaakt van de muur
+        // voeg toe aan map
+        MapTypeClients.insert(TempToevoegenClient);
+        return 1;
+    }
+    if (strcmp(messages, "m") == 0)
+    {
+        // het is een Zuil
+        std::cout << "De client is mary" << std::endl;
+        // maak een muil aan
+        std::pair<int, Client *> TempToevoegenClient;
+        TempToevoegenClient.first = fd;
+        TempToevoegenClient.second = new Mary(fd, 5); // object aangemaakt van de muur
+        send(fd, Ackmary, strlen(Ackmary), MSG_NOSIGNAL) != strlen(Ackmary);
         // voeg toe aan map
         MapTypeClients.insert(TempToevoegenClient);
         return 1;
@@ -202,7 +223,7 @@ void Server::ServerLoop()
                     if (it != MapTypeClients.end())
                     {
 
-                        Client* client = it->second;
+                        Client *client = it->second;
                         int type = client->GeefType();
                         if (type == 4) // Zuil
                         {
@@ -210,40 +231,115 @@ void Server::ServerLoop()
 
                             stuurAck(client->GeefFD());
                             std::cout << message << "\n";
-                            Zuil* zuil = dynamic_cast<Zuil *>(client);
+                            Zuil *zuil = dynamic_cast<Zuil *>(client);
 
-                            
-                                if (!zuil)
-                                {
-                                    std::cerr << "Dynamic cast naar Zuil mislukt. Controleer of client een Zuil-object is." << std::endl;
-                                    return;
-                                }
-                            else{
-                            VerwerkDataZuil (client, message);
-                            std::cout << " Waarde Button " << zuil->GetValueButton() << std::endl;
-                            std::cout << " Waarde Brandmelder " << zuil->GetValueBrandmelder() << std::endl;
+                            if (!zuil)
+                            {
+                                std::cerr << "Dynamic cast naar Zuil mislukt. Controleer of client een Zuil-object is." << std::endl;
+                                return;
+                            }
+                            else
+                            {
+                                VerwerkDataZuil(client, message);
+                                std::cout << " Waarde Button " << zuil->GetValueButton() << std::endl;
+                                std::cout << " Waarde Brandmelder " << zuil->GetValueBrandmelder() << std::endl;
                             }
                         }
+                        if (type == 5) // Mary
+                        {
+                            std::cout << "  gekoppeld aan bericht van Mary" << std::endl;
+
+                            stuurAck(client->GeefFD());
+                            std::cout << message << "\n";
+                            Mary *mary = dynamic_cast<Mary *>(client);
+
+                            if (!mary)
+                            {
+                                std::cerr << "Dynamic cast naar Mary mislukt. Controleer of client een Zuil-object is." << std::endl;
+                                return;
+                            }
+                            else
+                            {
+                                VerwerkDataMary(client, message);
+                                std::cout << " Waarde Hulp " << mary->GetHulpStatus() << std::endl;
+                                std::cout << " Waarde Deur " << mary->GetDeurStatus() << std::endl;
+                            }
+                        }
+                        // if (type == 2) // Zuil
+                        //{
+                        std::cout << " bericht van schemerlamp" << std::endl;
+
+                        // stuurAck(client->GeefFD());
+                        std::cout << message << "\n";
+                        /*Zuil* zuil = dynamic_cast<Zuil *>(client);
+
+
+                            if (!zuil)
+                            {
+                                std::cerr << "Dynamic cast naar Zuil mislukt. Controleer of client een Zuil-object is." << std::endl;
+                                return;
+                            }
+                        else{
+                        VerwerkDataZuil (client, message);
+                        std::cout << " Waarde Button " << zuil->GetValueButton() << std::endl;
+                        std::cout << " Waarde Brandmelder " << zuil->GetValueBrandmelder() << std::endl;
+                        }*/
                     }
                 }
-                /// {
-                /*
-                     message[valread] = '\0';
-                     std::cout << "message from client: " << sd << " lengte valread van buffer is: " << valread << "  " << message << "\n";
-                     stuurAck(sd);
-
-                      * handle the message in new thread
-                      * so that we can listen to other client
-                      * in the main thread
-                      * std::thread t1(handleMessage, client, message);
-                      * // detach the thread so that it can run independently
-                      * t1.detach();
-                      */
-                // }
             }
+        }
+        for (auto it = MapTypeClients.begin(); it != MapTypeClients.end(); it++)
+        {
+            Client *client = it->second;
+            sd = it->first;
+            int type = client->GeefType();
+            if(type == 5){
+                Mary *mary = dynamic_cast<Mary *>(client);
+                if(mary->GetDeurStatus()== 1 ){
+                    const char* message = "1";
+                    send(clientSocket, message, strlen(message), 0);
+                    mary->SetDeurStatus(0);
+                }
+            }
+        
         }
     }
 }
+
+void Server::VerwerkDataMary(Client *client, char *message)
+{
+
+    int waarde;
+    std::cout << message << "\n";
+    Mary *mary = dynamic_cast<Mary *>(client);
+    if (strcmp(message, "y")==0)
+    {
+        waarde = 1;
+        if (mary)
+    {
+        // zuil->SetButton(message);
+
+        mary->SetHulpStatus(waarde);
+    }
+    }
+    if (strcmp(message,  "d")==0)
+    {
+        waarde = 1;
+        if (mary)
+    {
+        mary->SetDeurStatus(waarde);
+    }
+    }
+    if (strcmp(message,  "x")==0)
+    {
+        waarde = 0;
+        if (mary)
+    {
+        mary->SetDeurStatus(waarde);
+    }
+    }
+}
+
 void Server::VerwerkDataZuil(Client *client, char *message)
 {
 
@@ -256,7 +352,21 @@ void Server::VerwerkDataZuil(Client *client, char *message)
         int buttonValue = atoi(message); // Converteer string naar integer
         zuil->SetWaarde(buttonValue);
     }
-   
+}
+
+
+void Server::VerwerkDataDeur(Client *client, char *message)
+{
+
+    stuurAck(client->GeefFD());
+    std::cout << message << "\n";
+    Deur *deur = dynamic_cast<Deur *>(client);
+    if (deur)
+    {
+        // zuil->SetButton(message);
+        int buttonValue = atoi(message); // Converteer string naar integer
+        //deur->SetDeurStatus(buttonValue);
+    }
 }
 
 void Server::ServerSetup()

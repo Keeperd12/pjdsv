@@ -11,9 +11,10 @@
 #include <vector>       // for storing client
 #include <map>          //for storing clientfd with pointer object
 #include <string.h> 
-
+#include "Deur.h"
 #include "Zuil.h" //include de muur
-
+#include "Mary.h"
+#include "Schemerlamp.h"
 class Server
 {
 public:
@@ -27,6 +28,8 @@ private:
     int stuurAck(int fd);
     int leesType(int fd);
     void VerwerkDataZuil(Client *client, char *message);
+    void VerwerkDataMary(Client *client, char *message);
+    void VerwerkDataDeur(Client *client, char *message);
     const int poort;
     const char *ip;
     const int backlog;
@@ -39,4 +42,5 @@ private:
     struct sockaddr_in serverAddr;
     char *welkomMessage = "Identificeer jezelf!";
     char *ackMessage = "ACK";
+    char *Ackmary = "Deur open = y, hulp = h, deur dicht = x";
 };

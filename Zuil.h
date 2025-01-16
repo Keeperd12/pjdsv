@@ -17,9 +17,9 @@ class Zuil : public Client
 public:
     Zuil (int, int);
 	~Zuil();
-	void SetWaarde(int Waarde);
-	int GetValueButton() const;
-	int GetValueBrandmelder() const;
+	 void SetWaarde(int Waarde);
+	 int GetValueButton() const;
+	 int GetValueBrandmelder() const;
 
 private:
     unsigned int Button;

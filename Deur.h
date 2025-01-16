@@ -2,14 +2,15 @@
 
 #include "Client.h"
 
-class Schemerlamp : public Client //Overerven van de Client klasse
+class Deur : public Client //Overerven van de Client klasse
 {
 public:
-    Schemerlamp(int, int); //Constructor
-    ~Schemerlamp(); //Destructor
+    Deur(int, int); //Constructor
+    ~Deur(); //Destructor
 
 //Functies nog toevoegen
 private:
+unsigned int status; 
 //Variabelen nog toevoegen
 };
 
