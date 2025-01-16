@@ -21,6 +21,7 @@ unsigned int i=0;
 unsigned int outputs =0;
 unsigned int input =0;
 String message;
+unsigned int gecombineerd=0;
 
 WiFiClient client;
 
@@ -145,13 +146,14 @@ void ReadAnalog(){
     return;
   }
   Wire.requestFrom(0x36, 4);   
-  unsigned int anin0 = Wire.read()&0x03;  
+  anin0 = Wire.read()&0x03;  
   anin0=anin0<<8;
   anin0 = anin0|Wire.read(); 
   //Serial.println(anin0);      
-  if ((anin0 >= old_anin0 - 5) || (anin0 <= old_anin0 + 5)){
+  if ((anin0 > old_anin0 + 5) || (anin0 < old_anin0 - 5)){
     VerstuurData();
   }
+  Serial.println(anin0);
 }
 
 void VerbindServer(){
@@ -198,7 +200,7 @@ void VerbindServer(){
 
 void VerstuurData(){
   Serial.println("zit in functie VerstuurData.");
-  unsigned int gecombineerd = (anin0 << 1) | input;
+  gecombineerd = (anin0 << 1) | input;
   Serial.print(gecombineerd);
   client.print(gecombineerd);
   while (!client.available()) {
