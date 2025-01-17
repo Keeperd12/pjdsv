@@ -287,21 +287,48 @@ void Server::ServerLoop()
                     }
                 }
             }
+        } // Loop input
+        FD_ZERO(&readfds);
+        // voeg de master socket toe aan de readfds set
+        FD_SET(masterSocket, &readfds);
+        maxfd = masterSocket;
+        // kopieer de clientlist naar de readfds
+        // zodat we naar alle client kunnen luisteren
+        for (auto it = MapTypeClients.begin(); it != MapTypeClients.end(); it++)
+        {
+            sd = it->first;
+            FD_SET(sd, &readfds);
+            if (sd > maxfd)
+            {
+                maxfd = sd;
+            }
         }
+
         for (auto it = MapTypeClients.begin(); it != MapTypeClients.end(); it++)
         {
             Client *client = it->second;
             sd = it->first;
             int type = client->GeefType();
-            if(type == 5){
+            if (type == 5)
+            {
                 Mary *mary = dynamic_cast<Mary *>(client);
-                if(mary->GetDeurStatus()== 1 ){
-                    const char* message = "1";
-                    send(clientSocket, message, strlen(message), 0);
-                    mary->SetDeurStatus(0);
+                if (mary->GetDeurStatus() == 1)
+                {
+                    for (auto it2 = MapTypeClients.begin(); it2 != MapTypeClients.end(); it2++)
+                    {
+                        Client *client2 = it2->second;
+                        sd = it2->first;
+                        int type2 = client2->GeefType();
+                        if (type2 == 3)
+                        {
+                            break;
+                        }
+                    }
+                    std::cout << "Bekijk de deur status " << mary->GetDeurStatus() << std::endl;
+                    std::cout << sd << std::endl;
+                    send(sd, messagedeur, strlen(messagedeur), 0) != strlen(messagedeur);
                 }
             }
-        
         }
     }
 }
@@ -312,31 +339,31 @@ void Server::VerwerkDataMary(Client *client, char *message)
     int waarde;
     std::cout << message << "\n";
     Mary *mary = dynamic_cast<Mary *>(client);
-    if (strcmp(message, "y")==0)
+    if (strcmp(message, "h") == 0)
     {
         waarde = 1;
         if (mary)
-    {
-        // zuil->SetButton(message);
+        {
+            // zuil->SetButton(message);
 
-        mary->SetHulpStatus(waarde);
+            mary->SetHulpStatus(waarde);
+        }
     }
-    }
-    if (strcmp(message,  "d")==0)
+    if (strcmp(message, "d") == 0)
     {
         waarde = 1;
         if (mary)
-    {
-        mary->SetDeurStatus(waarde);
+        {
+            mary->SetDeurStatus(waarde);
+        }
     }
-    }
-    if (strcmp(message,  "x")==0)
+    if (strcmp(message, "x") == 0)
     {
         waarde = 0;
         if (mary)
-    {
-        mary->SetDeurStatus(waarde);
-    }
+        {
+            mary->SetDeurStatus(waarde);
+        }
     }
 }
 
@@ -354,7 +381,6 @@ void Server::VerwerkDataZuil(Client *client, char *message)
     }
 }
 
-
 void Server::VerwerkDataDeur(Client *client, char *message)
 {
 
@@ -365,7 +391,7 @@ void Server::VerwerkDataDeur(Client *client, char *message)
     {
         // zuil->SetButton(message);
         int buttonValue = atoi(message); // Converteer string naar integer
-        //deur->SetDeurStatus(buttonValue);
+        // deur->SetDeurStatus(buttonValue);
     }
 }
 
