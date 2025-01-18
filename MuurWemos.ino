@@ -56,6 +56,7 @@ void setup() {
   Serial.println("\nVerbonden met netwerk!");
   LED(255, 255, 255);
   updateOudeWaardes();
+  void setupLCD();
 }
 
 
@@ -101,7 +102,7 @@ void loop(void) {
   while (client.connected()) {
     //eerst kijken of er een bericht is:
     delay(50);
-    Serial.println("Debug punt 1");
+    //Serial.println("Debug punt 1");
     
     if (client.available()) {
       message = "";
@@ -109,16 +110,23 @@ void loop(void) {
         char c = client.read();  // Lees een karakter
         message += c;            // Voeg het toe aan de buffer
       }
-      unsigned int temp = atoi(message.c_str());
+      //unsigned int temp = atoi(message.c_str());
       Serial.println("Dit is het ontvangen bericht van de server");
-      Serial.println(temp);
+      
+      if(message[0] == '0'){
+        SluitLCD();
+      }
+      if(message[0] == '1'){
+        OpenLCD();
+      }
+      Serial.println(message);
       //DimLedInstant(temp);
-      dimLed(temp);
+      //dimLed(temp);
       //FastLED.show();
     }
     //is er verandering en staat er geen bericht om eerst uit te lezen?
     updateNieuweWaardes();
-    Serial.println("Waardes geupdate!");
+    //Serial.println("Waardes geupdate!");
     if (verandering() && !client.available()) {
       Serial.println("De data is gewijzigd");
       client.print(leesGecombineerd());
@@ -211,20 +219,20 @@ void LED(int R, int G, int B) {
   FastLED.show();
 }
 void dimLed(uint16_t x) {
-  uint8_t scaled_value = ((unsigned long)x * 255) / 1023;
-  if (FastLED.getBrightness() > scaled_value) {
-    while (scaled_value != FastLED.getBrightness()) {
+  //uint8_t scaled_value = x;
+  if (FastLED.getBrightness() > x) {
+    while (x != FastLED.getBrightness()) {
       FastLED.setBrightness(FastLED.getBrightness() - 1);
       FastLED.show();
-      delay(10);
+      delay(3);
       //Serial.println(FastLED.getBrightness()); voor debuggen
     }
   }
-  if (FastLED.getBrightness() < scaled_value) {
-    while (scaled_value != FastLED.getBrightness()) {
+  if (FastLED.getBrightness() < x) {
+    while (x != FastLED.getBrightness()) {
       FastLED.setBrightness(FastLED.getBrightness() + 1);
       FastLED.show();
-      delay(10);
+      delay(3);
       //Serial.println(FastLED.getBrightness()); voor debuggen
     }
   }
@@ -302,6 +310,12 @@ String leesGecombineerd() {
 
   return String(binOutput);
   //return ((unsigned long)anin0 << 10) | anin1;  // Retourneer de oorspronkelijke waarde
+}
+void setupLCD(){
+  Wire.beginTransmission(0x38); //start i2c communicatie met apparaat op adres 0x38 
+  Wire.write(byte(0x03)); //schrijf naar register 0x03 wat verantwoordelijk is voor input of output          
+  Wire.write(byte(0x0F)); //stel de eerste 4 pinnen als input      
+  Wire.endTransmission(); //sluit de i2c transmissie af
 }
 void OpenLCD() {
   Wire.beginTransmission(0x38);
