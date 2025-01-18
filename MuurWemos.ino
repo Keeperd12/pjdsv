@@ -56,7 +56,7 @@ void setup() {
   Serial.println("\nVerbonden met netwerk!");
   LED(255, 255, 255);
   updateOudeWaardes();
-  void setupLCD();
+  setupLCD();
 }
 
 
@@ -112,14 +112,20 @@ void loop(void) {
       }
       //unsigned int temp = atoi(message.c_str());
       Serial.println("Dit is het ontvangen bericht van de server");
-      
-      if(message[0] == '0'){
+      char LCDchar = message[0];
+      char *binaryString = &message[1];
+      uint8_t helderHeid = (uint8_t)strtol(binaryString, NULL, 2);
+      //Serial.println(helderHeid);
+      dimLed(helderHeid);
+
+      if(LCDchar == '0'){
         SluitLCD();
       }
-      if(message[0] == '1'){
+      if(LCDchar == '1'){
         OpenLCD();
       }
-      Serial.println(message);
+      //unsigned int temp = (message+1).toInt();
+      //Serial.println(temp);
       //DimLedInstant(temp);
       //dimLed(temp);
       //FastLED.show();
@@ -133,7 +139,7 @@ void loop(void) {
       //nu wachten op een ack van de server
       while(!client.available()){
         Serial.println("Aan het wachten op een ACK bericht van de server");
-        delay(50);
+        delay(25);
       }
       message = "";
       while(client.available()){
