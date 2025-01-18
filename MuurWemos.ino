@@ -24,6 +24,10 @@ IPAddress local_Ip(192, 168, 10, 99);  //wanneer de pi dhcp zou hebben zou dit n
 IPAddress gateway(192, 168, 10, 1);
 IPAddress subnet(255, 255, 255, 0);
 
+volatile unsigned int Pot = 0;
+volatile unsigned int Ldr = 0;
+volatile unsigned int anin0 = 0;
+volatile unsigned int anin1 = 0;
 
 WiFiClient client;
 
@@ -50,7 +54,10 @@ void setup() {
     Serial.print(".");
   }
   Serial.println("\nVerbonden met netwerk!");
+  LED(255, 255, 255);
+  updateOudeWaardes();
 }
+
 
 
 void loop(void) {
@@ -76,6 +83,7 @@ void loop(void) {
       Serial.println("Ge identificeert!");
       client.print("Muur");
       while (!client.available()) {
+        Serial.println("Wachten tot start teken: Identificeer jezelf van de server");
         delay(500);
       }  //wacht oneindig tot dat er iets te ontvangen valt
       // Lees alle beschikbare bytes
@@ -89,40 +97,97 @@ void loop(void) {
       }
     }
   }
-  delay(250);
+
   while (client.connected()) {
-    //de client is verbonden dus nu kijken of ontvangen of verzenden
-      //zolang de client niets uit te lezen heeft
-      //maak de buffer om te zenden leeg
-      delay(10);
-      client.print(leesGecombineerd(), BIN);  //verstuur iets in de buffer HIER ELKE KEER OPNIEUW DATA INLEZEN VAN WEMOS EN VERTSTUREN
-      client.flush();
-      while(!client.available()){
-        //Serial.println("Wachten op een reactie van de server"); om te debuggen
-        //delay(25); om te debuggen
-      }
+    //eerst kijken of er een bericht is:
+    delay(50);
+    Serial.println("Debug punt 1");
+    
+    if (client.available()) {
       message = "";
       while (client.available()) {
+        char c = client.read();  // Lees een karakter
+        message += c;            // Voeg het toe aan de buffer
+      }
+      unsigned int temp = atoi(message.c_str());
+      Serial.println("Dit is het ontvangen bericht van de server");
+      Serial.println(temp);
+      //DimLedInstant(temp);
+      dimLed(temp);
+      //FastLED.show();
+    }
+    //is er verandering en staat er geen bericht om eerst uit te lezen?
+    updateNieuweWaardes();
+    Serial.println("Waardes geupdate!");
+    if (verandering() && !client.available()) {
+      Serial.println("De data is gewijzigd");
+      client.print(leesGecombineerd());
+      //nu wachten op een ack van de server
+      while(!client.available()){
+        Serial.println("Aan het wachten op een ACK bericht van de server");
+        delay(50);
+      }
+      message = "";
+      while(client.available()){
+        char c = client.read();  // Lees een karakter
+        message += c; 
+      }
+      // wacht op de data die geretouneerd wordt
+      
+      client.write("ACK");
+    }
+    /* //de client is verbonden dus nu kijken of ontvangen of verzenden
+    //zolang de client niets uit te lezen heeft
+    //maak de buffer om te zenden leeg
+    //delay(500);
+    client.print(leesGecombineerd());  //verstuur iets in de buffer HIER ELKE KEER OPNIEUW DATA INLEZEN VAN WEMOS EN VERTSTUREN
+    //client.flush();
+    while (!client.available()) {
+      Serial.println("Wachten op een reactie van de server");  // om te debuggen
+      delay(50);        
+      client.print(leesGecombineerd());                                       //om te debuggen
+    }
+    message = "";
+    while (client.available()) {
       char c = client.read();  // Lees een karakter
       message += c;            // Voeg het toe aan de buffer
     }
-    if(message == "opdracht"){
-      Serial.println("Voer opdracht uit");
-      client.print("ACK");
-    }
     if (message == "ACK") {
       Serial.println("Server heeft correct ontvangen");
-    } 
-    else {
-      Serial.println("wacht op ack van de server");  //dit kan dus een opdracht zijn evt
-      while (1) {
-        delay(250);
-        
-        }
-        //na het uitvoeren hiervan een ACK sturen anders blijft de server op niks wachten
+    } else {
+      Serial.println(message);
+      
+      //nsigned int temp = message.toInt();
+
+      //dimLed(temp);
+      if(message!="69"&& message != "ACK69"){
+        unsigned int temp = atoi(message.c_str());
+        DimLedInstant(temp);
       }
+      
+      //client.print("ACK");
+      delay(250);
+      
+    }
+    //delay(500);*/
   }
 }
+int verandering() {
+  // Cast to int to avoid ambiguity with unsigned types
+  if (abs((int)(anin1 - Pot)) > 5) {  // If the absolute difference is larger than 10
+    Pot = anin1;
+    Ldr = anin0;
+    return 1;  // There is a change
+  }
+  if (abs((int)(anin0 - Ldr)) > 100) {  // If the absolute difference is larger than 10
+    Pot = anin1;
+    Ldr = anin0;
+    return 1;  // There is a change
+  }
+  return 0;  // No change
+}
+
+
 
 void setupLDRPotentio() {
   Wire.beginTransmission(0x36);  //start i2c communicatie omzetter
@@ -145,17 +210,18 @@ void LED(int R, int G, int B) {
   leds[2] = (R, G, B);
   FastLED.show();
 }
-void dimLed(uint8_t x) {
-  if (FastLED.getBrightness() > x) {
-    while (x != FastLED.getBrightness()) {
+void dimLed(uint16_t x) {
+  uint8_t scaled_value = ((unsigned long)x * 255) / 1023;
+  if (FastLED.getBrightness() > scaled_value) {
+    while (scaled_value != FastLED.getBrightness()) {
       FastLED.setBrightness(FastLED.getBrightness() - 1);
       FastLED.show();
       delay(10);
       //Serial.println(FastLED.getBrightness()); voor debuggen
     }
   }
-  if (FastLED.getBrightness() < x) {
-    while (x != FastLED.getBrightness()) {
+  if (FastLED.getBrightness() < scaled_value) {
+    while (scaled_value != FastLED.getBrightness()) {
       FastLED.setBrightness(FastLED.getBrightness() + 1);
       FastLED.show();
       delay(10);
@@ -163,12 +229,21 @@ void dimLed(uint8_t x) {
     }
   }
 }
+void DimLedInstant(uint16_t x) {
+  //uint8_t scaled_value = (x / 4);
+  uint8_t scaled_value = ((unsigned long)x * 255) / 1023;
+  FastLED.setBrightness(scaled_value);
+  Serial.print("Zet de LED op: ");
+  Serial.println(scaled_value);
+  FastLED.show();
+}
 void ledAan() {
   if (FastLED.getBrightness() < 255) {
     while (255 != FastLED.getBrightness()) {
       FastLED.setBrightness(FastLED.getBrightness() + 1);
+      delay(100);
       FastLED.show();
-      delay(10);
+      //delay(10);
       //Serial.println(FastLED.getBrightness()); voor debuggen
     }
   }
@@ -184,17 +259,49 @@ void ledUit() {
     }
   }
 }
+void updateNieuweWaardes() {
+  Wire.requestFrom(0x36, 4);                        // Vraag 4 bytes aan van de MAX11647 (2 analoge ingangen)
+  anin0 = (Wire.read() & 0x03) << 8 | Wire.read();  // Eerste 10-bit waarde
+  //Serial.println(anin0);
+  anin1 = (Wire.read() & 0x03) << 8 | Wire.read();  // Tweede 10-bit waarde
+  //Serial.println(anin1);
+}
+void updateOudeWaardes() {
+  Wire.requestFrom(0x36, 4);                        // Vraag 4 bytes aan van de MAX11647 (2 analoge ingangen)
+  Pot = (Wire.read() & 0x03) << 8 | Wire.read();  // Eerste 10-bit waarde
+  //Serial.println(anin0);
+  Ldr = (Wire.read() & 0x03) << 8 | Wire.read();  // Tweede 10-bit waarde
+  //Serial.println(anin1);
+}
 //functie leest in 1 keer alle data uit van ldr+potentiometer en kan dit mooi binair sturen
-unsigned long leesGecombineerd() {
-  Wire.requestFrom(0x36, 4);                //Vraag 4 bytes aan van de MAX11647 (voor twee analoge ingangen).
-  unsigned int anin0 = Wire.read() & 0x03;  //Lees de eerste twee bytes en combineer ze om de 10-bits waarde van de eerste analoge ingang te krijgen.
-  anin0 = anin0 << 8;                       //Shift de eerste byte en combineer deze met de tweede byte om de volledige 10-bit waarde van de eerste ingang te krijgen.
-  anin0 = anin0 | Wire.read();              //zie hierboven
-  unsigned int anin1 = Wire.read() & 0x03;  //Herhaal hetzelfde voor de tweede analoge ingang.
-  anin1 = anin1 << 8;                       //zie hierboven
-  anin1 = anin1 | Wire.read();              //zie hierboven
+String leesGecombineerd() {
+  Wire.requestFrom(0x36, 4);  // Vraag 4 bytes aan van de MAX11647 (2 analoge ingangen)
+
+  if (Wire.available() < 4) {  // Controleer of er 4 bytes zijn ontvangen
+    Serial.println("Error: Not enough data received!");
+    return "00000000000000000000";
+  }
+
+  // Lees en combineer 10-bit waarden voor de twee analoge ingangen
+  anin0 = (Wire.read() & 0x03) << 8 | Wire.read();  // Eerste 10-bit waarde
+  anin1 = (Wire.read() & 0x03) << 8 | Wire.read();  // Tweede 10-bit waarde
+
+  // Combineer beide 10-bit waarden in een 20-bit resultaat
   unsigned long combi = ((unsigned long)anin0 << 10) | anin1;
-  return combi;
+
+  // Zorg ervoor dat de binaire output altijd 20 bits lang is
+  char binOutput[21];  // 20 bits + 1 voor null-terminator
+  for (int i = 19; i >= 0; i--) {
+    binOutput[i] = (combi & 1) ? '1' : '0';  // Zet de laatste bit in de string
+    combi >>= 1;                             // Schuif bits naar rechts
+  }
+  binOutput[20] = '\0';  // Sluit de string af
+
+  // Print de 20-bits waarde
+  //Serial.println(binOutput);
+
+  return String(binOutput);
+  //return ((unsigned long)anin0 << 10) | anin1;  // Retourneer de oorspronkelijke waarde
 }
 void OpenLCD() {
   Wire.beginTransmission(0x38);
