@@ -124,6 +124,8 @@ void loop(void) {
       if(LCDchar == '1'){
         OpenLCD();
       }
+      delay(100);
+      //client.write("ACK");
       //unsigned int temp = (message+1).toInt();
       //Serial.println(temp);
       //DimLedInstant(temp);
@@ -146,6 +148,8 @@ void loop(void) {
         char c = client.read();  // Lees een karakter
         message += c; 
       }
+      Serial.println("dit de debug uitlezen");
+      Serial.println(message);
       // wacht op de data die geretouneerd wordt
       
       client.write("ACK");
