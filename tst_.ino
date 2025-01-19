@@ -87,30 +87,39 @@ void loop() {
 
    }
    if(client.connected()){
-    
+   LeesSchakelaars();
+   VerstuurData();
    DataCheck();
    }
 
   delay(50);  // Vermijd snelle herhaling
 }
 
+void LeesSchakelaars() {
+  // Lees de knopstatus via I2C
+  Wire.beginTransmission(I2C_ADDRESS);
+  Wire.write(byte(0x00));
+  Wire.endTransmission();
+  Wire.requestFrom(I2C_ADDRESS, 1);
+  current_input = Wire.read();
+}
+
+
 
 void VerstuurData() {
-  Serial.println("Zit in functie VerstuurData.");
+  if (current_input != old_input) {  // Alleen versturen bij verandering
+    Serial.println("Knopstatus gewijzigd, versturen naar server...");
 
-  // Combineer de status van de switches en de deur in een enkel getal
-  unsigned int gecombineerd =  | (old_input & 0x0F);
-  
-  // Stuur de gecombineerde status naar de server
-  client.print(gecombineerd);
-  Serial.print("Gecombineerde data verstuurd: ");
-  Serial.println(gecombineerd);
+    // Combineer de status van de schakelaars
+    client.print(current_input & 0x0F);
+    Serial.print("Nieuwe knopstatus verstuurd: ");
+    Serial.println(current_input & 0x0F);
 
-  // Wacht op een ACK van de server
-  while (!client.available()) {
-    Serial.println("Wacht op ACK van de server...");
-    delay(500);
-  }
+    // Wacht op een ACK van de server
+    while (!client.available()) {
+      Serial.println("Wacht op ACK van de server...");
+      delay(500);
+    }
 
   // Lees het antwoord van de server
   message = "";
