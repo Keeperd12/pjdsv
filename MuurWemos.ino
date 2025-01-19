@@ -110,13 +110,23 @@ void loop(void) {
         char c = client.read();  // Lees een karakter
         message += c;            // Voeg het toe aan de buffer
       }
+      //Serial.println(strlen(message));
+      if(message[0]=='1'){
+        Serial.println("deze message is ge initiseerd door de server, dus nog een ack sturen");
+        client.write("ACK");
+      }
+      if(message[0]=='0'){
+        Serial.println("Dit bericht is een reactie op een zelf verzonden bericht");
+      }
       //unsigned int temp = atoi(message.c_str());
       Serial.println("Dit is het ontvangen bericht van de server");
-      char LCDchar = message[0];
-      char *binaryString = &message[1];
+      Serial.println(message);
+      char LCDchar = message[1];
+      char *binaryString = &message[2];
       uint8_t helderHeid = (uint8_t)strtol(binaryString, NULL, 2);
       //Serial.println(helderHeid);
       dimLed(helderHeid);
+      //client.write("ACK");
 
       if(LCDchar == '0'){
         SluitLCD();
@@ -124,13 +134,12 @@ void loop(void) {
       if(LCDchar == '1'){
         OpenLCD();
       }
-      delay(100);
-      //client.write("ACK");
       //unsigned int temp = (message+1).toInt();
       //Serial.println(temp);
       //DimLedInstant(temp);
       //dimLed(temp);
       //FastLED.show();
+      client.flush();
     }
     //is er verandering en staat er geen bericht om eerst uit te lezen?
     updateNieuweWaardes();
@@ -148,11 +157,10 @@ void loop(void) {
         char c = client.read();  // Lees een karakter
         message += c; 
       }
-      Serial.println("dit de debug uitlezen");
-      Serial.println(message);
       // wacht op de data die geretouneerd wordt
-      
+      message = "";
       client.write("ACK");
+      client.flush();
     }
     /* //de client is verbonden dus nu kijken of ontvangen of verzenden
     //zolang de client niets uit te lezen heeft
