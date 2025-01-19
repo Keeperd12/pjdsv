@@ -1,6 +1,6 @@
 #include "Client.h"
 
-Client::Client(int getal, int Type) : clientFD(getal), type(Type){}
+Client::Client(int getal, int Type, Server *s) : clientFD(getal), type(Type), server(s){}
 
 Client::~Client(){}
 

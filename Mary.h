@@ -3,6 +3,7 @@
 #include "Client.h"
 #include <iostream>
 #include <string.h> 
+#include <map>
 
 class Mary : public Client
 
@@ -10,9 +11,12 @@ class Mary : public Client
 
 public:
 
-    Mary (int, int);
+    Mary (int, int, Server*);
 
     ~Mary();
+
+    void Update(char *message) override;
+    virtual char* GeefData() override;
 
     void SetHulpStatus(int Waarde);
 
@@ -21,6 +25,11 @@ public:
     int GetDeurStatus();
 
     int GetHulpStatus() ;
+
+    virtual void LCDopen(const std::map<int, Client*>& MapTypeClients);
+    virtual void LCDsluiten(const std::map<int, Client*>& MapTypeClients);
+
+    void printStatusMuur(const std::map<int, Client*>& MapTypeClients);
 
     
 

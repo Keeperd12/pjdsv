@@ -5,7 +5,7 @@
 class Deur : public Client //Overerven van de Client klasse
 {
 public:
-    Deur(int, int); //Constructor
+    Deur(int, int, Server*); //Constructor
     ~Deur(); //Destructor
 
 //Functies nog toevoegen
