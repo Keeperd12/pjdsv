@@ -7,13 +7,13 @@
 #define I2C_ADDRESS 0x38  // I2C-adres van PCA9554A
 
 // Wi-Fi-configuratie
-const char* ssid = "PiVanOli4";
-const char* password = "WachtwoordPiVanOli4";
+const char* ssid = "Ramon's";
+const char* password = "ramondirksen";
 WiFiClient client;
-const char* server = "192.168.10.1";  // IP-adres van de server
+const char* server = "192.168.222.41";  // IP-adres van de server
 const uint16_t port = 8080;
-IPAddress local_Ip(192,168,10,30); //wanneer de pi dhcp zou hebben zou dit niet nodig zijn en is de code helemaal identiek op beide wemossen
-IPAddress gateway(192,168,10,1);
+IPAddress local_Ip(192,168,10,20); //wanneer de pi dhcp zou hebben zou dit niet nodig zijn en is de code helemaal identiek op beide wemossen
+IPAddress gateway(192,168,222,41);
 IPAddress subnet(255,255,255,0);
 
 // Servo-object
@@ -27,12 +27,13 @@ unsigned long openDelay = 3000;
 unsigned long switchPressedTime = 0;
 bool switchPressed = false;
 bool closeDoorRequested = false;
-
+String message;
 // Variabelen voor LED-besturing
 bool ledState = false;
 bool blinking = false;
 unsigned long previousMillis = 0;
 const long interval = 500;
+unsigned int DeurStatus = 0;
 
 // Variabelen voor de schakelaar
 unsigned int old_input = 0;
@@ -81,18 +82,100 @@ void setup() {
 void loop() {
   
    if(!client.connected()){
+
+ VerbindServer();     
+
+   }
+   if(client.connected()){
+    
+   DataCheck();
+   }
+
+  delay(50);  // Vermijd snelle herhaling
+}
+
+
+void VerstuurData() {
+  Serial.println("Zit in functie VerstuurData.");
+
+  // Combineer de status van de switches en de deur in een enkel getal
+  unsigned int gecombineerd =  | (old_input & 0x0F);
+  
+  // Stuur de gecombineerde status naar de server
+  client.print(gecombineerd);
+  Serial.print("Gecombineerde data verstuurd: ");
+  Serial.println(gecombineerd);
+
+  // Wacht op een ACK van de server
+  while (!client.available()) {
+    Serial.println("Wacht op ACK van de server...");
+    delay(500);
+  }
+
+  // Lees het antwoord van de server
+  message = "";
+  while (client.available()) {
+    char c = client.read(); // Lees een karakter
+    message += c;           // Voeg het toe aan de buffer
+  }
+
+  // Controleer of de server ACK heeft gestuurd
+  if (message == "ACK") {
+    Serial.println("Server heeft correct ontvangen");
+  } else {
+    Serial.println("Fout bij ontvangstbevestiging van server: " + message);
+  }
+}
+
+void VerbindServer(){ 
     Serial.print("connecting to ");
-    Serial.print("Host");
+    Serial.print(server);
     Serial.print(':');
     Serial.println(port);
-    delay(500);
-    client.connect(gateway, 8080);  
-  }
-  
-   if (client.connected()) {
-    //Is er iets uit te lezen
-    if (client.available() > 0) {
-      String message = ""; // Buffer om het bericht op te slaan
+     
+    if(!client.connect(server, port)) {
+        Serial.println("Connection failed!");
+        return;
+    }
+
+    Serial.println("Connected to server");
+    //Serial.print('1');
+     while (!client.available()) {
+        delay(500);
+      }
+
+    //Serial.print('2');
+    message = ""; // Buffer om het bericht op te slaan
+    // Lees alle beschikbare bytes
+    while (client.available()) {
+        char c = client.read(); // Lees een karakter
+        message += c;           // Voeg het toe aan de buffer
+    }
+      Serial.println(message);
+
+      client.print("Deur");
+     
+      while (!client.available()) {
+        delay(500);
+      }  //wacht oneindig tot dat er iets te ontvangen valt
+      // Lees alle beschikbare bytes
+      message = "";
+      while (client.available()) {
+        char c = client.read();  // Lees een karakter
+        message += c;            // Voeg het toe aan de buffer
+      }
+      if (message == "ACK") {
+        Serial.println("Server heeft correct ontvangen");
+}
+}
+
+void DataCheck(){
+  //Serial.println("Welkom in datacheck");
+  Serial.println(client.available());
+    if (client.available()) {
+      Serial.println("in datacheck Client available");
+       // Buffer om het bericht op te slaan
+       message = "";
       // Lees alle beschikbare bytes
       while (client.available()) {
         char c = client.read(); // Lees een karakter
@@ -100,95 +183,30 @@ void loop() {
       }
 
     // Toon het volledige bericht
-    Serial.print("Ontvangen bericht: ");
-    Serial.println(message);
-    }
-    //is er iets om te versturen?
-    delay(800);
-    client.print("Test Deur");
-    
-  
-  }
-
-
-
-  
-  // Lees de knopstatus via I2C
-  Wire.beginTransmission(I2C_ADDRESS); 
-  Wire.write(byte(0x00));      
-  Wire.endTransmission();
-  Wire.requestFrom(I2C_ADDRESS, 1);   
-  unsigned int input = Wire.read(); 
-  
-  // Controleer op knoppeninvoer
-  if (input != old_input) {  
-    if (input & 0x0F) {  // Als een schakelaar is ingedrukt
-      Serial.println("Knop ingedrukt");
-
-      if (!switchPressed) {
-        switchPressedTime = millis();
-        switchPressed = true;
-      } else if (doorOpen && !closeDoorRequested) {
-        closeDoorRequested = true;
-      }
-    } else {
-      Serial.println("Knop niet ingedrukt");
-    }
-  }
-  old_input = input;
-
-  // LED-knipperlogica
-  if (blinking) {
-    unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis >= interval) {
-      previousMillis = currentMillis;
-      ledState = !ledState;
+      Serial.print("Ontvangen bericht: ");
+      Serial.println(message);
+      client.print("ACK");
       
-      Wire.beginTransmission(I2C_ADDRESS);
-      Wire.write(byte(0x01));
-      Wire.write(byte(3 << 4)); // waarde schrijven
-      Wire.endTransmission();
-    }
-  }
-
-  // Servo-logica voor deur openen
-  unsigned long currentMillis = millis();
-  if (switchPressed && currentMillis - switchPressedTime >= openDelay && !doorOpen) {
-    myServo.write(195);  // Deur openen
-    doorOpen = true;
-    doorTimer = currentMillis;
-    blinking = true;
-    sendStatusToServer("Deur geopend");
-  }
-
-  // Deur sluiten
-  if (closeDoorRequested && currentMillis - doorTimer >= doorDelay) {
-    myServo.write(72);  // Deur sluiten
-    doorOpen = false;
-    blinking = false;
-    closeDoorRequested = false;
-    switchPressed = false;
     
-    Wire.beginTransmission(I2C_ADDRESS);
-    Wire.write(byte(0x01));
-    Wire.write(byte(0x00));  // LEDs uit
-    Wire.endTransmission();
-
-    sendStatusToServer("Deur gesloten");
-  }
-
-  delay(50);  // Vermijd snelle herhaling
+    if (message == "1"){
+          Serial.println("message = 1");
+         
+      Deur();
+      }
+    if (message=="0"){
+      myServo.write(72);
+    }
+}
 }
 
-// Functie om de status naar de server te sturen
-void sendStatusToServer(const char* status) {
-//  if (client.connect(server, port)) {
-    //client.print("Test Deur");
-   
-    Serial.print("Status verzonden: ");
-    //delay(800);
-    Serial.println(status);
-//  } else {
-   // Serial.println("Verbinding met server mislukt.");
-  //}
+void Deur(){
+   Serial.println("Deur openen...");
+  myServo.write(195);
+  for (int a = 0; a = 8000; a++){
+    DataCheck();
+    
+    delay(1);
+  }
+  Serial.println("Deur sluiten...");
+  myServo.write(72);
 }
