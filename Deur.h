@@ -1,16 +1,22 @@
-#pragma once //Voorkomen van meervoudige inclusie van de header file
+#pragma once // Voorkomen van meervoudige inclusie van de header file
 
 #include "Client.h"
 
-class Deur : public Client //Overerven van de Client klasse
+class Deur : public Client // Overerven van de Client klasse
 {
 public:
-    Deur(int, int, Server*); //Constructor
-    ~Deur(); //Destructor
+    Deur(int, int, Server* ); // Constructor
+    ~Deur();                  // Destructor
+    virtual void Update(char *);
+    virtual char *GeefData();
+    virtual void moetIkIetsDoen(char *); //moet ik iets doen
+    void SetWaarde(int Waarde);
+    int GetValueButton() const;
+    //void SetWaarde(int Waarde);
+	//int GetValueButton() const;
 
-//Functies nog toevoegen
+    // Functies nog toevoegen
 private:
-unsigned int status; 
-//Variabelen nog toevoegen
+    unsigned int Button;
+    // Variabelen nog toevoegen
 };
-

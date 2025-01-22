@@ -1,13 +1,15 @@
 #include "Bewaking.h"
 #include "Server.h"
 
-	Bewaking::Bewaking (int, int, Server*) : Client(fd, type, s){
+	Bewaking::Bewaking (int fd, int type, Server *s) : Client(fd, type, s){
    std::cout << "Object gemaakt" << std::endl;
 }
 
-	~Bewaking::Bewaking() {}
+	Bewaking::~Bewaking() {}
+
+
 	
-	void Update(char *message)
+	void Bewaking::Update(char *message)
 	{
 	 std::cout << "message from client: " << std::endl;
 	}

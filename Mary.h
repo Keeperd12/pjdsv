@@ -21,24 +21,17 @@ public:
     void SetHulpStatus(int Waarde);
 
     void SetDeurStatus(int Waarde);
-    
-    int GetDeurStatus();
-
-    int GetHulpStatus() ;
 
     virtual void LCDopen(const std::map<int, Client*>& MapTypeClients);
     virtual void LCDsluiten(const std::map<int, Client*>& MapTypeClients);
 
     void printStatusMuur(const std::map<int, Client*>& MapTypeClients);
 
-    
+    void DeurOpen(const std::map<int, Client*>& MapTypeClients);
 
- 
+    void DeurDicht(const std::map<int, Client*>& MapTypeClients);
 
 private:
-
-    unsigned int StatusHulp;
-    unsigned int StatusDeur;
 
 };
 

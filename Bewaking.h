@@ -11,7 +11,7 @@ class Bewaking : public Client
 
 public:
 
-	Bewaking (int, int, Server*);
+	Bewaking (int , int , Server*);
 	~Bewaking();
 	void Update(char *message) override;
 	virtual char* GeefData() override;

@@ -11,8 +11,8 @@ Zuil::~Zuil() {}
 
 void Zuil::SetWaarde(int Waarde)
 {
-    unsigned int Brandmelder = (Waarde >> 1) & 0x03FF;
-    unsigned int Button = Waarde & 0x01;
+    Brandmelder = (Waarde >> 1) & 0x03FF;
+    Button = Waarde & 0x01;
     //std::cout << " Waarde Brandmelder " << Brandmelder << std::endl;
     //std::cout << " Waarde Button " << Button << std::endl;
     //return;

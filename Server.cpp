@@ -19,7 +19,8 @@ int Server::stuurAck(int fd)
         // zoek de bijhorende pointer naar het object en verwijder
         // nog doen ^
         auto i = MapTypeClients.find(fd);
-        if(MapTypeClients.find(fd) != MapTypeClients.end()){
+        if (MapTypeClients.find(fd) != MapTypeClients.end())
+        {
             delete i->second;
         }
         std::cout << "Object vewijderd" << std::endl;
@@ -70,8 +71,15 @@ int Server::leesType(int fd)
     }
     if (strcmp(messages, "Deur") == 0)
     {
-        // het is een Deur
+        // het is een Deur // het is een Deur
         std::cout << "De client is een Deur" << std::endl;
+        // Aanmaken van een Schemerlamp object.
+        std::pair<int, Client *> TempToevoegenClient; // Het binden van de unieke fd per object aan de pointer naar het client object.
+        TempToevoegenClient.first = fd;               // Het eerste lid van de pair gelijkzetten aan de unieke fd.
+        // Het daadwerkelijk aanmaken van de Schemerlamp op de heap door het aanroepen van de constructor, wat resulteert in de pointer dat het tweede lid van de pair is.
+        TempToevoegenClient.second = new Deur(fd, 3, this);
+        MapTypeClients.insert(TempToevoegenClient);
+        // Nieuwe schemerlamp toevoegen aan de clients map via insert
         return 1;
     }
     if (strcmp(messages, "Zuil") == 0)
@@ -100,13 +108,30 @@ int Server::leesType(int fd)
         MapTypeClients.insert(TempToevoegenClient);
         return 1;
     }
+    if (strcmp(messages, "b") == 0)
+    {
+        // het is een Bewaker
+        std::cout << "De client is Bewaker" << std::endl;
+        // maak een Bewaker aan
+        std::pair<int, Client *> TempToevoegenClient;
+        TempToevoegenClient.first = fd;
+        TempToevoegenClient.second = new Bewaking(fd, 6, this); // object aangemaakt van de muur
+        send(fd, welcomeBewaking, strlen(welcomeBewaking), MSG_NOSIGNAL) != strlen(welcomeBewaking);
+        // voeg toe aan map
+        MapTypeClients.insert(TempToevoegenClient);
+        return 1;
+    }
+    return 0;
 }
+
 int Server::leesAck(int fd)
 {
-    //snelle fix om te voorkomen dat mary ACK moet sturen en de server blokt
+    // snelle fix om te voorkomen dat mary ACK moet sturen en de server blokt
     auto it = MapTypeClients.find(fd);
-    if (it != MapTypeClients.end()){
-        if (it->second->GeefType() == 5){
+    if (it != MapTypeClients.end())
+    {
+        if (it->second->GeefType() == 5)
+        {
             std::cout << "Mary hoeft geen ACK te sturen" << std::endl;
             return 1;
         }
@@ -127,13 +152,14 @@ int Server::leesAck(int fd)
     }
     else
     {
-        
+
         std::cout << "ACK niet ontvangen maar wel iets anders: " << messages << std::endl;
         return 0;
     }
 }
 void Server::stuurBericht(int fd, char *message)
 {
+
     if (send(fd, message, strlen(message), 0) != strlen(message))
     {
         std::cout << "verbinding verbroken" << std::endl;
@@ -146,7 +172,7 @@ void Server::stuurBericht(int fd, char *message)
     }
     else
     {
-        
+
         leesAck(fd);
     } // return onsuccesvol
 }
@@ -156,7 +182,7 @@ void Server::VerwerkDataMary(Client *client, char *message)
     int waarde;
     std::cout << message << "\n";
     Mary *mary = dynamic_cast<Mary *>(client);
-    if (strcmp(message, "h") == 0)
+    /*if (strcmp(message, "h") == 0)
     {
         waarde = 1;
         if (mary)
@@ -165,22 +191,16 @@ void Server::VerwerkDataMary(Client *client, char *message)
 
             mary->SetHulpStatus(waarde);
         }
-    }
+    }*/
     if (strcmp(message, "d") == 0)
     {
-        waarde = 1;
-        if (mary)
-        {
-            mary->SetDeurStatus(waarde);
-        }
+        std::cout << "deur open" << std::endl;
+        mary->DeurOpen(MapTypeClients);
     }
     if (strcmp(message, "x") == 0)
     {
-        waarde = 0;
-        if (mary)
-        {
-            mary->SetDeurStatus(waarde);
-        }
+        std::cout << "deur sluiten" << std::endl;
+        mary->DeurDicht(MapTypeClients);
     }
     if (strcmp(message, "z") == 0)
     {
@@ -202,6 +222,37 @@ void Server::VerwerkDataMary(Client *client, char *message)
     }
 }
 
+void Server::VerwerkDataBewaking(Client *client, char *message)
+{
+
+    int waarde;
+    std::cout << message << "\n";
+    Bewaking *bewaking = dynamic_cast<Bewaking *>(client);
+    /*if (strcmp(message, "h") == 0)
+    {
+        waarde = 1;
+        if (mary)
+        {
+            // zuil->SetButton(message);
+
+            mary->SetHulpStatus(waarde);
+        }
+    }*/
+    if (strcmp(message, "d") == 0)
+    {
+        std::cout << "deur open" << std::endl;
+        bewaking->DeurOpen(MapTypeClients);
+    }
+    if (strcmp(message, "x") == 0)
+    {
+        std::cout << "deur sluiten" << std::endl;
+        bewaking->DeurDicht(MapTypeClients);
+    }
+   
+}
+
+
+
 void Server::VerwerkDataZuil(Client *client, char *message)
 {
 
@@ -220,13 +271,12 @@ void Server::VerwerkDataDeur(Client *client, char *message)
 {
 
     stuurAck(client->GeefFD());
-    std::cout << message << "\n";
+    //std::cout << message << "\n";
     Deur *deur = dynamic_cast<Deur *>(client);
     if (deur)
     {
-        // zuil->SetButton(message);
         int buttonValue = atoi(message); // Converteer string naar integer
-        // deur->SetDeurStatus(buttonValue);
+        deur->SetWaarde(buttonValue);
     }
 }
 
@@ -334,7 +384,7 @@ void Server::ServerLoop()
                         if (type == 1)
                         {
                             // stuurAck(it->first);
-                            //std::cout << "bericht voorbestemd voor de muur" << std::endl;
+                            // std::cout << "bericht voorbestemd voor de muur" << std::endl;
                             stuurAck(it->first);
                             // sleep(100);
                             client->Update(message);
@@ -345,6 +395,7 @@ void Server::ServerLoop()
                             Zuil *zuil = dynamic_cast<Zuil *>(client);
                             if (zuil)
                             {
+                                VerwerkDataZuil(client, message);
                                 std::cout << "Dit is de button waarde: " << zuil->GetValueButton() << std::endl;
                                 std::cout << "Dit is de Brandmelder waarde: " << zuil->GetValueBrandmelder() << std::endl;
                             }
@@ -353,55 +404,112 @@ void Server::ServerLoop()
                         {
                             std::cout << "  gekoppeld aan bericht van Mary" << std::endl;
 
-                            //stuurAck(client->GeefFD()); mary hoeft geen ack te ontvangen
+                            // stuurAck(client->GeefFD()); mary hoeft geen ack te ontvangen
                             std::cout << message << "\n";
                             Mary *mary = dynamic_cast<Mary *>(client);
 
                             if (!mary)
                             {
-                                std::cerr << "Dynamic cast naar Mary mislukt. Controleer of client een Zuil-object is." << std::endl;
+                                std::cerr << "Dynamic cast naar Mary mislukt. Controleer of client een Deur-object is." << std::endl;
                                 return;
                             }
                             else
                             {
                                 VerwerkDataMary(client, message);
-                                std::cout << " Waarde Hulp " << mary->GetHulpStatus() << std::endl;
-                                std::cout << " Waarde Deur " << mary->GetDeurStatus() << std::endl;
+                            }
+                        }
+                        if (type == 3) // Deur
+                        {
+                            std::cout << "gekoppeld aan bericht van Deur" << std::endl;
+                            //std::cout << message << "\n";
+                            Deur *deur = dynamic_cast<Deur *>(client);
+                           
+                                VerwerkDataDeur(client, message);
+                                std::cout << " Waarde Button " << deur->GetValueButton() << std::endl;
+                            
+                        }
+                        if (type == 6) // Bewaking
+                        {
+                            std::cout << "  gekoppeld aan bericht van Bewaking" << std::endl;
+
+                            // stuurAck(client->GeefFD()); mary hoeft geen ack te ontvangen
+                            std::cout << message << "\n";
+                            Bewaking *bewaking = dynamic_cast<Bewaking *>(client);
+
+                            if (!bewaking)
+                            {
+                                std::cerr << "Dynamic cast naar bewaking mislukt. Controleer of client een Deur-object is." << std::endl;
+                                return;
+                            }
+                            else
+                            {
+                                VerwerkDataBewaking(client, message);
                             }
                         }
                     }
                 }
-                /// {
-                /*
-                     message[valread] = '\0';
-                     std::cout << "message from client: " << sd << " lengte valread van buffer is: " << valread << "  " << message << "\n";
-                     stuurAck(sd);
+            }
+        }
+        sleep(2);
+        //chercken input
+        FD_ZERO(&readfds);
+        // voeg de master socket toe aan de readfds set
+        FD_SET(masterSocket, &readfds);
+        maxfd = masterSocket;
+        // kopieer de clientlist naar de readfds
+        // zodat we naar alle client kunnen luisteren
+        for (auto it = MapTypeClients.begin(); it != MapTypeClients.end(); it++)
+        {
+            sd = it->first;
+            FD_SET(sd, &readfds);
+            if (sd > maxfd)
+            {
+                maxfd = sd;
+            }
+        }
+        for (auto it = MapTypeClients.begin(); it != MapTypeClients.end(); it++)
+        {
+            Client *client = it->second;
+            sd = it->first;
+            int type = client->GeefType();
+            if (type == 3)
+            {
+                Deur *deur = dynamic_cast<Deur *>(client);
+                if (deur->GetValueButton() == 1)
+                {
 
-                      * handle the message in new thread
-                      * so that we can listen to other client
-                      * in the main thread
-                      * std::thread t1(handleMessage, client, message);
-                      * // detach the thread so that it can run independently
-                      * t1.detach();
-                      */
-                // }
+                    std::cout << "Bekijk de deur status " << deur->GetValueButton() << std::endl;
+                    std::cout << sd << std::endl;
+                    const char *DeurOpen = "1";
+                    send(sd, DeurOpen, strlen(DeurOpen), 0) != strlen(DeurOpen);
+                
+                    deur->SetWaarde(0);
+                }
+                if (deur->GetValueButton() == 2)
+                {
+
+                    std::cout << "Bekijk de deur status " << deur->GetValueButton() << std::endl;
+                    std::cout << sd << std::endl;
+                    const char *DeurDicht = "2";
+                    send(sd, DeurDicht, strlen(DeurDicht), 0) != strlen(DeurDicht);
+                
+                    deur->SetWaarde(0);
+                }
+            }
+            if (type == 4)
+            {
+                Zuil *zuil = dynamic_cast<Zuil *>(client);
+                if(zuil->GetValueButton() == 1){
+                std::cout << "iets doen waneer de knop zuil is ingedrukt " << zuil->GetValueButton() << std::endl;
+                }
+                if(zuil->GetValueBrandmelder() > 300){
+                std::cout << "iets doen waneer er brand is" << zuil->GetValueButton() << std::endl;
+                }
             }
         }
     }
 }
-/*void Server::VerwerkDataZuil(Client *client, char *message)
-{
 
-    stuurAck(client->GeefFD());
-    std::cout << message << "\n";
-    Zuil *zuil = dynamic_cast<Zuil *>(client);
-    if (zuil)
-    {
-        // zuil->SetButton(message);
-        int buttonValue = atoi(message); // Converteer string naar integer
-        zuil->SetWaarde(buttonValue);
-    }
-}*/
 
 void Server::ServerSetup()
 {
