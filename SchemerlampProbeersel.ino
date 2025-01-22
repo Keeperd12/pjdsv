@@ -7,7 +7,7 @@
 int UpdateHandler(); // Een functie die alleen naar de server schrijft bij statuswijzigingen.
 int RegistrateMovement(); // Registrating movement when someone enters the apartment, for the signal to the security.
 void ToggleLamp(); // Aan- of uitzetten van de lamp op basis van triggers.
-void TurnLampOn();
+void TurnLampOn(uint8_t helderheid);
 void TurnLampOff();
 
 volatile int prevMovement = 0;
@@ -50,10 +50,10 @@ void setup()
   Wire.endTransmission(); // Stop condition, ending the communication.
 
   // Setup settings for the lamp:
+  pinMode(D5, OUTPUT); // Anders kan je de lamp niet aansturen.
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(led, LED); // Setup for controlling the lamp.
   FastLED.setMaxPowerInVoltsAndMilliamps(5, 500); // Maximum power draw.
   FastLED.clear(); // Clear the remaining buffer.
-  FastLED.show(); // Update the lamp with the current data.
 
   // Server setup
   Serial.print("Connecting to ");
@@ -69,6 +69,8 @@ void setup()
   Serial.println("Verbonden met het netwerk!");
 
   prevMovement = RegistrateMovement();
+  led[0] = CRGB::Yellow; // Turn the lamp yellow when it's turned on.
+  FastLED.show(); // Update the lamp with the current data.  
 }
 
 void loop(void) {
@@ -120,6 +122,12 @@ void loop(void) {
         char c = client.read();  // Lees een karakter
         message += c;            // Voeg het toe aan de buffer
       }
+
+      Serial.println("Het bericht is geinitiseerd door de server dus nog een ack sturen");
+      client.print("ACK");
+
+      char *binaryString = &message[0];
+      uint8_t helderheid = (uint8_t)strtol(binaryString, NULL, 2);
       /*
         //Serial.println(strlen(message));
         if (message[0] == '1') {
@@ -131,9 +139,9 @@ void loop(void) {
         }
         //unsigned int temp = atoi(message.c_str());
         Serial.println("Dit is het ontvangen bericht van de server");*/
-      Serial.println(message);
-
-      client.flush();
+      Serial.println(helderheid);
+      TurnLampOn(helderheid);
+      //client.flush();
     }
 
     //is er verandering en staat er geen bericht om eerst uit te lezen?
@@ -171,7 +179,7 @@ int UpdateHandler()
   return 0;
 }
 
-void ToggleLamp()
+/*void ToggleLamp()
 {
   if (lampState == 0)
   {
@@ -185,7 +193,7 @@ void ToggleLamp()
   }
 
   delay(500);
-}
+} */
 
 int RegistrateMovement()
 {
@@ -197,10 +205,9 @@ int RegistrateMovement()
   return readValue;
 }
 
-void TurnLampOn()
+void TurnLampOn(uint8_t helderheid)
 {
-  led[0] = CRGB::Yellow; // Turn the lamp yellow when it's turned on.
-  FastLED.setBrightness(64);
+  FastLED.setBrightness(helderheid);
   FastLED.show();
 }
 
