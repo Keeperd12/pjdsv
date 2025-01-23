@@ -12,35 +12,29 @@ class Mary : public Client
 public:
 
     Mary (int, int, Server*);
+    virtual ~Mary();
 
-    ~Mary();
-
-    void Update(char *message) override;
+    //over geerfde functies die overidden evt kunnen worden
+    virtual void Update(char *message) override;
     virtual char* GeefData() override;
 
-    void SetHulpStatus(int Waarde);
-
-    void SetDeurStatus(int Waarde);
-    
-    int GetDeurStatus();
-
-    int GetHulpStatus() ;
-
+    //alles met betrekking tot de muur
     virtual void LCDopen(const std::map<int, Client*>& MapTypeClients);
     virtual void LCDsluiten(const std::map<int, Client*>& MapTypeClients);
     virtual void LedHelderheid(const std::map<int, Client*>& MapTypeClients);
+    virtual void printStatusMuur(const std::map<int, Client*>& MapTypeClients);
 
-    void printStatusMuur(const std::map<int, Client*>& MapTypeClients);
+    virtual void MaryThuis();
 
-    
+    //alles met betrekking tot de deur
+    void DeurOpen(const std::map<int, Client*>& MapTypeClients);
+    void DeurDicht(const std::map<int, Client*>& MapTypeClients);
 
- 
+    void SetHulpStatus(int Waarde){};
+    void SetDeurStatus(int Waarde){};
 
 private:
-
-    unsigned int StatusHulp;
-    unsigned int StatusDeur;
-
+    int isMaryThuis=1; // de variabel die gezet wordt om te kijken of Mary thuis, ze is standaard
 };
 
 

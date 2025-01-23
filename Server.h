@@ -17,6 +17,7 @@
 #include "Schemerlamp.h"
 #include "Mary.h"
 #include "Zuil.h" //include de muur
+#include "Bewaking.h"
 
 class Server
 {
@@ -31,6 +32,7 @@ public:
     void VerwerkDataZuil(Client *client, char *message);
     void VerwerkDataMary(Client *client, char *message);
     void VerwerkDataDeur(Client *client, char *message);
+    void VerwerkDataBewaking(Client *client, char *message);
     std::map<int, Client*>& GeefPointerMap(); //fix voor het versturen van schemerlamp naar mary
     ~Server();
 
@@ -51,5 +53,7 @@ private:
     char *ackMessage = "ACK";
     char *Menumary = "\nDeur open = y, hulp = h, deur dicht = x, muur venster openen = z, muur venster sluiten =y, informatie muur opvragen = w";
     char *welcomeMary = "\nWelkom mary";
+    char *welcomeBewaking = "\nWelkom Bewaking";
+    char *MenuBewaking = "\nDeur open = y, deur dicht = x";
     
 };

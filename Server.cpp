@@ -76,8 +76,15 @@ int Server::leesType(int fd)
     }
     if (strcmp(messages, "Deur") == 0)
     {
-        // het is een Deur
+        // het is een Deur // het is een Deur
         std::cout << "De client is een Deur" << std::endl;
+        // Aanmaken van een Schemerlamp object.
+        std::pair<int, Client *> TempToevoegenClient; // Het binden van de unieke fd per object aan de pointer naar het client object.
+        TempToevoegenClient.first = fd;               // Het eerste lid van de pair gelijkzetten aan de unieke fd.
+        // Het daadwerkelijk aanmaken van de Schemerlamp op de heap door het aanroepen van de constructor, wat resulteert in de pointer dat het tweede lid van de pair is.
+        TempToevoegenClient.second = new Deur(fd, 3, this);
+        MapTypeClients.insert(TempToevoegenClient);
+        // Nieuwe schemerlamp toevoegen aan de clients map via insert
         return 1;
     }
     if (strcmp(messages, "Zuil") == 0)
@@ -106,6 +113,46 @@ int Server::leesType(int fd)
         MapTypeClients.insert(TempToevoegenClient);
         return 1;
     }
+    if (strcmp(messages, "b") == 0)
+    {
+        // het is een Bewaker
+        std::cout << "De client is Bewaker" << std::endl;
+        // maak een Bewaker aan
+        std::pair<int, Client *> TempToevoegenClient;
+        TempToevoegenClient.first = fd;
+        TempToevoegenClient.second = new Bewaking(fd, 6, this); // object aangemaakt van de muur
+        send(fd, welcomeBewaking, strlen(welcomeBewaking), MSG_NOSIGNAL) != strlen(welcomeBewaking);
+        // voeg toe aan map
+        MapTypeClients.insert(TempToevoegenClient);
+        return 1;
+    }
+}
+void Server::VerwerkDataBewaking(Client *client, char *message)
+{
+
+    int waarde;
+    std::cout << message << "\n";
+    Bewaking *bewaking = dynamic_cast<Bewaking *>(client);
+    /*if (strcmp(message, "h") == 0)
+    {
+        waarde = 1;
+        if (mary)
+        {
+            // zuil->SetButton(message);
+
+            mary->SetHulpStatus(waarde);
+        }
+    }*/
+    if (strcmp(message, "d") == 0)
+    {
+        std::cout << "deur open" << std::endl;
+        bewaking->DeurOpen(MapTypeClients);
+    }
+    if (strcmp(message, "x") == 0)
+    {
+        std::cout << "deur sluiten" << std::endl;
+        bewaking->DeurDicht(MapTypeClients);
+    }
 }
 int Server::leesAck(int fd)
 {
@@ -115,10 +162,14 @@ int Server::leesAck(int fd)
     {
         if (it->second->GeefType() == 5)
         {
-            std::cout << "Mary hoeft geen ACK te sturen" << std::endl;
+            return 1;
+        }
+        if (it->second->GeefType() == 6)
+        {
             return 1;
         }
     }
+
     char messages[1024];
     // lees het bericht uit
     valread = read(fd, messages, 1024);
@@ -166,7 +217,6 @@ void Server::VerwerkDataMary(Client *client, char *message)
 {
 
     int waarde;
-    std::cout << message << "\n";
     Mary *mary = dynamic_cast<Mary *>(client);
     if (strcmp(message, "h") == 0)
     {
@@ -196,25 +246,31 @@ void Server::VerwerkDataMary(Client *client, char *message)
     }
     if (strcmp(message, "z") == 0)
     {
-        std::cout << "venster openen" << std::endl;
         mary->LCDopen(MapTypeClients); // aanroepen van de functie LCD open
         // hieronder nog stuk code om de muur te vragen naar de helderheid
     }
     if (strcmp(message, "y") == 0)
     {
-        std::cout << "venster sluiten" << std::endl;
         mary->LCDsluiten(MapTypeClients); // aanroepen van de functie LCD sluiten
         // hieronder nog stuk code om de muur te vragen naar de LDR waarde
     }
     if (strcmp(message, "w") == 0)
     {
-        std::cout << "informatie muur opvragen" << std::endl;
         mary->printStatusMuur(MapTypeClients); // aanroepen van de functie LCD sluiten
         // hieronder nog stuk code om de muur te vragen naar de LDR waarde
     }
+    if (strcmp(message, "e") == 0)
+    {
+        mary->LedHelderheid(MapTypeClients); // aanroepen van de functie LCD sluiten
+        // hieronder nog stuk code om de muur te vragen naar de LDR waarde
+    }
+     if (strcmp(message, "l") == 0)
+    {
+        mary->MaryThuis(); // aanroepen van de functie LCD sluiten
+    }
 }
 
-void Server::VerwerkDataZuil(Client *client, char *message)
+/*void Server::VerwerkDataZuil(Client *client, char *message)
 {
 
     stuurAck(client->GeefFD());
@@ -226,7 +282,7 @@ void Server::VerwerkDataZuil(Client *client, char *message)
         int buttonValue = atoi(message); // Converteer string naar integer
         zuil->SetWaarde(buttonValue);
     }
-}
+}*/
 
 void Server::VerwerkDataDeur(Client *client, char *message)
 {
@@ -238,7 +294,7 @@ void Server::VerwerkDataDeur(Client *client, char *message)
     {
         // zuil->SetButton(message);
         int buttonValue = atoi(message); // Converteer string naar integer
-        // deur->SetDeurStatus(buttonValue);
+        deur->SetWaarde(buttonValue);
     }
 }
 
@@ -265,10 +321,10 @@ void Server::ServerLoop()
             }
         }
         // check nog eens
-        /*if (sd > maxfd)
+        if (sd > maxfd)
         {
             maxfd = sd;
-        }*/
+        }
         // gebruik select om te luisteren naar meedere clients
         activity = select(maxfd + 1, &readfds, NULL, NULL, NULL);
         if (activity < 0)
@@ -360,15 +416,16 @@ void Server::ServerLoop()
                             // sleep(100);
                             client->Update(message);
                         }
-                        if(type == 3){
-                            std::cout<< "Bericht voorbestemd voor de deur" << std::endl;
+                        if (type == 3)
+                        {
+                            std::cout << "Bericht voorbestemd voor de deur" << std::endl;
                             stuurAck(it->first);
                             client->Update(message);
                         }
                         if (type == 4) // Zuil
                         {
                             std::cout << "bericht voorbestemd voor de zuil" << std::endl;
-                            stuurAck(it->first); //stuur ack
+                            stuurAck(it->first); // stuur ack
                             client->Update(message);
                         }
                         if (type == 5) // Mary
@@ -387,8 +444,8 @@ void Server::ServerLoop()
                             else
                             {
                                 VerwerkDataMary(client, message);
-                                std::cout << " Waarde Hulp " << mary->GetHulpStatus() << std::endl;
-                                std::cout << " Waarde Deur " << mary->GetDeurStatus() << std::endl;
+                                // std::cout << " Waarde Hulp " << mary->GetHulpStatus() << std::endl;
+                                // std::cout << " Waarde Deur " << mary->GetDeurStatus() << std::endl;
                             }
                         }
                     }

@@ -6,10 +6,10 @@ class Schemerlamp : public Client // Overerven van de Client klasse
 {
 public:
     Schemerlamp(int, int, Server *); // Constructor
-    ~Schemerlamp();                  // Destructor
+    virtual ~Schemerlamp();                  // Destructor
     virtual void Update(char *);     // Functie voor het updaten van de Schemerlamp
     virtual char *GeefData();        // Functie voor het geven van de data van de Schemerlamp
-    void moetIkIetsDoen(char *bericht);
+    virtual void moetIkIetsDoen(char *bericht);
 
     // Functies nog toevoegen
 private:
