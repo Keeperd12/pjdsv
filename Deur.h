@@ -12,11 +12,13 @@ public:
     virtual void moetIkIetsDoen(char *); //moet ik iets doen
     void SetWaarde(int Waarde);
     int GetValueButton() const;
+
     //void SetWaarde(int Waarde);
 	//int GetValueButton() const;
 
     // Functies nog toevoegen
 private:
     unsigned int Button;
+    unsigned int Statusdeur;
     // Variabelen nog toevoegen
 };

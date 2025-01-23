@@ -15,11 +15,22 @@ void Deur::Update(char *bericht)
     {
         SetWaarde(2);
     }
+     if (strcmp(bericht, "4") == 0)
+    {
+        SetWaarde(4);
+    }
+         moetIkIetsDoen(bericht);
+
+
+
 }
+
+
 
 
 void Deur::moetIkIetsDoen(char *bericht)
 {
+    sleep(1);
     if (this->Button == 1)
     {
         char temp[20];
@@ -28,7 +39,28 @@ void Deur::moetIkIetsDoen(char *bericht)
         std::cout << temp << std::endl;
         server->stuurBericht(GeefFD(), temp);
     }
+    if (this->Button == 2)
+    {
+        char temp[20];
+        temp[0] = '2';
+        temp[1] = '\0';
+        std::cout << temp << std::endl;
+        server->stuurBericht(GeefFD(), temp);
+    
+    
+    }
+     if (this->Button == 4)
+    {
+
+        char temp[20];
+        temp[0] = '4';
+        temp[1] = '\0';
+        std::cout << temp << std::endl;
+        server->stuurBericht(GeefFD(), temp);
+    
+    }
 }
+
 
 char *Deur::GeefData()
 {
@@ -44,6 +76,7 @@ char *Deur::GeefData()
 int Deur::GetValueButton() const
 {
     return Button;
+   // server->stuurBericht(GeefType(), "test");
 }
 
 void Deur::SetWaarde(int Waarde)
@@ -51,3 +84,4 @@ void Deur::SetWaarde(int Waarde)
     Button = Waarde;
 
 }
+

@@ -54,5 +54,5 @@ private:
     char *welcomeMary = "\nWelkom mary";
     char *welcomeBewaking = "\nWelkom Bewaking";
     char *MenuBewaking = "\nDeur open = y, deur dicht = x";
-    
+    //unsigned int Brandstatus = 0;
 };

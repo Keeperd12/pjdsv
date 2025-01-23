@@ -8,16 +8,19 @@ class Zuil : public Client
 {
 public:
     Zuil (int, int, Server*);
-	~Zuil();
+	virtual ~Zuil();
 	virtual void Update(char*);
+	virtual void moetIkIetsDoen(char *); //moet ik iets doen
 	virtual char* GeefData();
-	void SetWaarde(int Waarde);
-	int GetValueButton() const;
-	int GetValueBrandmelder() const;
+
+
 
 private:
-    unsigned int Button;
-	unsigned int Brandmelder;
+    int Button;
+	int Brandmelder;
+	int StatusZoemer;
+	int StatusLed;
+	
 
 };
 

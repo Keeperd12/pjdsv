@@ -21,6 +21,7 @@ public:
     void SetHulpStatus(int Waarde);
 
     void SetDeurStatus(int Waarde);
+    
 
     virtual void LCDopen(const std::map<int, Client*>& MapTypeClients);
     virtual void LCDsluiten(const std::map<int, Client*>& MapTypeClients);
