@@ -19,12 +19,20 @@ void Deur::Update(char *bericht)
     {
         SetWaarde(4);
     }
+    if(strcmp(bericht, "5")== 0){
+        std::cout<< "De deur heeft ontvangen dat het nacht is" << std::endl;
+        SetWaarde(5);
+    }
+    if(strcmp(bericht, "6")== 0){
+        std::cout<< "De deur heeft ontvangen dat het nacht is" << std::endl;
+        SetWaarde(6);
+    }
     moetIkIetsDoen(bericht);
 }
 
 void Deur::moetIkIetsDoen(char *bericht)
 {
-    sleep(1);
+    //sleep(1);
     if (this->Button == 1)
     {
         char temp[20];
@@ -48,6 +56,18 @@ void Deur::moetIkIetsDoen(char *bericht)
         temp[0] = '4';
         temp[1] = '\0';
         std::cout << temp << std::endl;
+        server->stuurBericht(GeefFD(), temp);
+    }
+    if(this->Button ==5){
+        char temp[20];
+        temp[0] = '5';
+        temp[1] = '\0';
+        server->stuurBericht(GeefFD(), temp);
+    }
+    if(this->Button ==6){
+        char temp[20];
+        temp[0] = '6';
+        temp[1] = '\0';
         server->stuurBericht(GeefFD(), temp);
     }
 }

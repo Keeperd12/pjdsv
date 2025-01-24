@@ -193,11 +193,16 @@ int Server::leesAck(int fd)
 }
 void Server::stuurBericht(int fd, char *message)
 {
-    if (send(fd, message, strlen(message), 0) != strlen(message))
+    if (send(fd, message, strlen(message), MSG_NOSIGNAL) != strlen(message))
     {
         std::cout << "verbinding verbroken" << std::endl;
         // zoek de bijhorende pointer naar het object en verwijder
         // nog doen ^
+        auto i = MapTypeClients.find(fd);
+        if (MapTypeClients.find(fd) != MapTypeClients.end())
+        {
+            delete i->second;
+        }
         std::cout << "Object vewijderd" << std::endl;
         // verwijder de client uit de map
         MapTypeClients.erase(fd);
@@ -264,7 +269,7 @@ void Server::VerwerkDataMary(Client *client, char *message)
         mary->LedHelderheid(MapTypeClients); // aanroepen van de functie LCD sluiten
         // hieronder nog stuk code om de muur te vragen naar de LDR waarde
     }
-     if (strcmp(message, "l") == 0)
+    if (strcmp(message, "l") == 0)
     {
         mary->MaryThuis(); // aanroepen van de functie LCD sluiten
     }
@@ -447,6 +452,11 @@ void Server::ServerLoop()
                                 // std::cout << " Waarde Hulp " << mary->GetHulpStatus() << std::endl;
                                 // std::cout << " Waarde Deur " << mary->GetDeurStatus() << std::endl;
                             }
+                        }
+                        if (type == 6)
+                        {
+                            std::cout << "Het bericht is voor de bewaker" << std::endl;
+                            VerwerkDataBewaking(client, message);
                         }
                     }
                 }

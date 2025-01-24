@@ -19,6 +19,8 @@ public:
 private:
     unsigned int Button;
 	unsigned int Brandmelder;
+	unsigned int StatusZoemer;
+	unsigned int StatusLed;
 
 };
 

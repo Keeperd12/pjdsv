@@ -155,7 +155,7 @@ void Muur::UpdateDoor()
     }
     else
     {
-        // het is nacht, geef een 5 aan de deuren
+        // het is nacht, geef een 6 aan de deuren
         for (auto it = server->GeefPointerMap().begin(); it != server->GeefPointerMap().end(); it++)
         {
             if (it->second->GeefType() == 3) // is het object een type schemerlamp?
