@@ -111,14 +111,17 @@ void Mary::DeurDicht(const std::map<int, Client*>& MapTypeClients)
 //flip de aanwezigheid van Mary
 void Mary::MaryThuis()
 {
-   if(this->isMaryThuis == 1)
+   if(this->MaryIsThuis == 1)
    {
       server->stuurBericht(GeefFD(), "Mary meldt zich af\r\n");
-      this->isMaryThuis = 0;
+      this->MaryIsThuis = 0;
    }
    else
    {
-      this->isMaryThuis = 1;
+      this->MaryIsThuis = 1;
       server->stuurBericht(GeefFD(), "Mary meldt zich aan\r\n");
    }
+}
+int Mary::isMaryThuis(){
+   return MaryIsThuis;
 }

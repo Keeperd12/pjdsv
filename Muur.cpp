@@ -104,6 +104,8 @@ void Muur::moetIkIetsDoen(char *bericht)
     temp[0] = '0';
     temp[1] = str2[0];
     strcpy(temp + 2, str1.c_str());
+    //alle muren updaten maar d
+
 
     server->stuurBericht(GeefFD(), temp);
 }
@@ -162,6 +164,17 @@ void Muur::UpdateDoor()
             {
                 it->second->Update("6"); // verstuur een 6 (Geen idee waarom 6, maar dat wilde Devesh)
             }
+        }
+    }
+}
+
+//functie voor het syncen van de muren
+void Muur::updateMuur(){
+    for (auto it = server->GeefPointerMap().begin(); it != server->GeefPointerMap().end(); it++)
+    {
+        if (it->second->GeefType() == 1) // is het object een type schemerlamp?
+        {
+            //it->second->Update // verstuur de helderheid waarde naar de klasse schemerlamp
         }
     }
 }

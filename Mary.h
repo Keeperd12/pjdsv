@@ -25,6 +25,7 @@ public:
     virtual void printStatusMuur(const std::map<int, Client*>& MapTypeClients);
 
     virtual void MaryThuis();
+    virtual int isMaryThuis();
 
     //alles met betrekking tot de deur
     void DeurOpen(const std::map<int, Client*>& MapTypeClients);
@@ -34,7 +35,7 @@ public:
     void SetDeurStatus(int Waarde){};
 
 private:
-    int isMaryThuis=1; // de variabel die gezet wordt om te kijken of Mary thuis, ze is standaard
+    int MaryIsThuis=1; // de variabel die gezet wordt om te kijken of Mary thuis, ze is standaard
 };
 
 

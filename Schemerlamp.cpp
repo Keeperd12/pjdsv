@@ -45,7 +45,16 @@ void Schemerlamp::moetIkIetsDoen(char *bericht)
         {
             if (it->second->GeefType() == 5)
             {
-                server->stuurBericht(it->first, "Er is beweging!");
+                Client *client = it->second;
+                Mary *mary = dynamic_cast<Mary* >(client);
+                if(mary->isMaryThuis() == 0){
+                    for(auto its = server->GeefPointerMap().begin(); its != server->GeefPointerMap().end(); its++){
+                        if(its->second->GeefType() == 6){
+                            server->stuurBericht(its->first, "Inbraak! beweging in mary haar appartement!\n" );
+                        }
+                    }
+                }
+                //server->stuurBericht(it->first, "Er is beweging!");
             }
         }
     }
