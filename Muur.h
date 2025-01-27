@@ -12,7 +12,6 @@ public:
     virtual char* GeefData() override; //geef data
     virtual void UpdateSchemerlamp();
     virtual void UpdateDoor();
-    virtual void updateMuur();
     virtual ~Muur();
 private:
     int StatusPotmeter;
