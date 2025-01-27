@@ -138,7 +138,7 @@ void Muur::UpdateDoor()
         // het is dag, geef een 5 aan de deuren
         for (auto it = server->GeefPointerMap().begin(); it != server->GeefPointerMap().end(); it++)
         {
-            if (it->second->GeefType() == 3) // is het object een type schemerlamp?
+            if (it->second->GeefType() == 3) // is het object een type Deur?
             {
                 it->second->Update("5"); // verstuur een 5 (Geen idee waarom 5, maar dat wilde Devesh)
             }
