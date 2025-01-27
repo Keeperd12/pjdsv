@@ -31,13 +31,21 @@ void Deur::Update(char *bericht)
         //deur
     }
     if(strcmp(bericht, "5")== 0){
-        std::cout<< "De deur heeft ontvangen dat het nacht is" << std::endl;
+        std::cout<< "De deur heeft ontvangen dat het dag is" << std::endl;
         SetWaarde(5);
         //muur
     }
     if(strcmp(bericht, "6")== 0){
-        std::cout<< "De deur heeft ontvangen dat het dag is" << std::endl;
+        std::cout<< "De deur heeft ontvangen dat het nacht is" << std::endl;
         SetWaarde(6);
+    }
+    if(strcmp(bericht, "8")== 0){
+        std::cout<< "De deur heeft ontvangen dat er brand is deur gaat open" << std::endl;
+        SetWaarde(8);
+    }
+    if(strcmp(bericht, "9")== 0){
+        std::cout<< "Geen brand meer deur gaat dicht" << std::endl;
+        SetWaarde(9);
     }
     moetIkIetsDoen(bericht);
 }
@@ -71,6 +79,13 @@ void Deur::moetIkIetsDoen(char *bericht)
         temp[1] = '3';
         temp[2] = '\0';
         std::cout << temp << std::endl;
+        for (auto it = server->GeefPointerMap().begin(); it != server->GeefPointerMap().end(); it++)
+        {
+            if (it->second->GeefType() == 4) // is het object een type Bewaking
+            {
+                it->second->Update("3");
+            }
+        }
         server->stuurBericht(GeefFD(), temp);
     }
     if (this->Button == 4)
@@ -81,6 +96,13 @@ void Deur::moetIkIetsDoen(char *bericht)
         temp[1] = '4';
         temp[2] = '\0';
         std::cout << temp << std::endl;
+        for (auto it = server->GeefPointerMap().begin(); it != server->GeefPointerMap().end(); it++)
+        {
+            if (it->second->GeefType() == 4) // is het object een type Bewaking
+            {
+                it->second->Update("2");
+            }
+        }
         server->stuurBericht(GeefFD(), temp);
     }
     if(this->Button ==5){
@@ -94,6 +116,20 @@ void Deur::moetIkIetsDoen(char *bericht)
         char temp[20];
         temp[0] = '1';
         temp[1] = '6';
+        temp[2] = '\0';
+        server->stuurBericht(GeefFD(), temp);
+    }
+     if(this->Button ==8){
+        char temp[20];
+        temp[0] = '1';
+        temp[1] = '8';
+        temp[2] = '\0';
+        server->stuurBericht(GeefFD(), temp);
+    }
+    if(this->Button ==9){
+        char temp[20];
+        temp[0] = '1';
+        temp[1] = '9';
         temp[2] = '\0';
         server->stuurBericht(GeefFD(), temp);
     }

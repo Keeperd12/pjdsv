@@ -19,8 +19,7 @@ private:
 	unsigned int StatusZoemer;
 	unsigned int StatusLed;
 	unsigned int HulpMary;
-	char *BewakingHulp = "Bewoner Mary heeft hulp nodig";
-	char *BewakingBrand = "Brand bij Bewoner Mary!";
+	unsigned int ZoemerBlink;
 
 };
 

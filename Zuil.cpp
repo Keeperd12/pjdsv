@@ -31,18 +31,19 @@ void Zuil::Update(char *bericht)
         this->Brandmelder = (data >> 1) & 0x03FF;
         this->Button = data & 0x01;
 
-        std::cout << "data brand" << this->Brandmelder << std::endl;
-        std::cout << "data button" << this->Button << std::endl;
-        std::cout << "data mary" << this->HulpMary << std::endl;
-
     }
 
-    if (strcmp(bericht, "1") == 0)
+    if (strlen(bericht) == 1)
     {
-
-        this->HulpMary = 1;
-        std::cout << "Het bericht is van Mary" << std::endl;
-        std::cout << "data mary" << this->HulpMary << std::endl;
+        if (strcmp(bericht, "1") == 0){
+            this->HulpMary = 1;
+        }
+        if (strcmp(bericht, "2") == 0){
+            this->ZoemerBlink = 1;
+        }
+         if (strcmp(bericht, "3") == 0){
+            this->ZoemerBlink = 0;
+        }
     }
     MoetIkIetsDoen(bericht);
 }
@@ -53,31 +54,40 @@ void Zuil::MoetIkIetsDoen(char *bericht)
     std::cout << "in MoetIkIetsDoen" << std::endl;
     std::string brand;
     std::string led;
+    std::string blink;
     if (this->Brandmelder >= 300)
     {   
-        std::cout << "er is brand!" << std::endl;
         brand = "1";
         StatusZoemer = 1;
+        StatusLed = 1;
+
         for (auto it = server->GeefPointerMap().begin(); it != server->GeefPointerMap().end(); it++)
         {
             if (it->second->GeefType() == 6) // is het object een type Bewaking
             {
-                server->stuurBericht(GeefFD(), BewakingHulp);
+                server->stuurBericht(it->first, "Brand bij Bewoner Mary!\n");
             }
         }
-         for (auto it = server->GeefPointerMap().begin(); it != server->GeefPointerMap().end(); it++)
+        for (auto it = server->GeefPointerMap().begin(); it != server->GeefPointerMap().end(); it++)
         {
             if (it->second->GeefType() == 3) // is het object een type Bewaking
             {
                 it->second->Update("8");
             }
         }
-        // hier de
+
     }
     else
     {
         StatusZoemer = 0;
         brand = '0';
+        for (auto it = server->GeefPointerMap().begin(); it != server->GeefPointerMap().end(); it++)
+        {
+            if (it->second->GeefType() == 3) // is het object een type Bewaking
+            {
+                it->second->Update("9");
+            }
+        }
     }
     if (this->Button == 1)
     {
@@ -108,22 +118,28 @@ void Zuil::MoetIkIetsDoen(char *bericht)
     }
     if ((this->Button == 1 || this->HulpMary == 1))
     {
-        std::cout << "hulp van zuil naar bewaking" << std::endl;
         for (auto it = server->GeefPointerMap().begin(); it != server->GeefPointerMap().end(); it++)
         {
             if (it->second->GeefType() == 6) // is het object een type Bewaking
             {
-                server->stuurBericht(GeefFD(), BewakingHulp);
+                server->stuurBericht(it->first, "Bewoner Mary heeft hulp nodig\n");
             }
         }
+    }
+    if (this->ZoemerBlink == 1)
+        {
+            blink = '1';
+        }
+    else{
+        blink = '0';
     }
 
     char temp[4];
     temp[0] = '0';
     temp[1] = brand[0];
     temp[2] = led[0];
-    temp[3] = '\0';
-
+    temp[3] = blink[0];
+    temp[4] = '\0';
     std::cout << "data dat verstuurd wordt " << temp << std::endl;
 
     server->stuurBericht(GeefFD(), temp);
