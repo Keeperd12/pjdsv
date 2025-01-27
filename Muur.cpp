@@ -111,11 +111,9 @@ char *Muur::GeefData()
     std::string str3 = std::to_string(StatusLCD);
     // combineer alle strings in een
     std::string combined = "\r\nMuur Potmeter= " + str0 + ", LDR: " + str2 + " waarde helderheid LED strip: " + str1 + " Status LCD=  " + str3 + "\r\n";
-    // unique smart pointer aanmaken voor de char array
-    std::unique_ptr<char[]> data(new char[combined.size() + 1]); //maakt ruimte voor een nieuwe char met de lengte van combined
-    strcpy(data.get(), combined.c_str()); // kopieer de string naar de char array
-
-    return data.release(); // geef de functie die de pointer ontvangt "ownership" en laat deze die zelf deleten
+    char *Data = new char[combined.size() + 1];
+    strcpy(Data, combined.c_str()); // kopieer de string naar de char array
+    return Data; 
 }
 
 void Muur::UpdateSchemerlamp()
@@ -131,11 +129,10 @@ void Muur::UpdateSchemerlamp()
             it->second->Update(data); //geef direct de string mee
         }
     }
-    delete[] data; //geef weer vrij
+    delete[] data; //geef weer vrij [] want array
 }
 void Muur::UpdateDoor()
 {
-    std::cout << "UpdateDoor" << std::endl;
     if (this->StatusLDR >= 300)
     {
         // het is dag, geef een 5 aan de deuren
