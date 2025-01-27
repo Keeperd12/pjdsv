@@ -29,9 +29,7 @@ public:
     int leesAck(int fd);
     int stuurAck(int fd);
     int leesType(int fd);
-    void VerwerkDataZuil(Client *client, char *message);
     void VerwerkDataMary(Client *client, char *message);
-    void VerwerkDataDeur(Client *client, char *message);
     void VerwerkDataBewaking(Client *client, char *message);
     std::map<int, Client*>& GeefPointerMap(); //fix voor het versturen van schemerlamp naar mary
     ~Server();

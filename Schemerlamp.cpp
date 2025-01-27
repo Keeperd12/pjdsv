@@ -6,28 +6,31 @@
 #include "Server.h"
 #include <bitset>
 
-Schemerlamp::Schemerlamp(int fd, int Type, Server *s) : Client(fd, Type, s) {} //Constructor voor Schemerlamp object via het aanroepen van de base class constructor
-Schemerlamp::~Schemerlamp() {} //Destructor
-
-void Schemerlamp::Update(char *bericht) //Verwerken van ontvangen berichten 
+Schemerlamp::Schemerlamp(int fd, int Type, Server *s) : Client(fd, Type, s) {}
+Schemerlamp::~Schemerlamp() {}
+void Schemerlamp::Update(char *bericht)
 {
     std::cout << "De lengte van het bericht is: " << strlen(bericht) << std::endl;
-    //Bericht is van de schemerlamp zelf!
+    // bericht is van de schemerlamp zelf!
     if (strlen(bericht) == 3)
     {
-        this->beweging = atoi(bericht); //Bericht omzetten naar integer en opslaan in de beweging int. this zorgt voor toekomstbestendigheid als er later meer met beweging gedaan wordt.
-        moetIkIetsDoen(bericht); //Ga iets doen adhv de inhoud van het bericht
+
+        this->beweging = atoi(bericht);
+        moetIkIetsDoen(bericht);
     }
-    //Dit is een update van de potmeter van de muur
-    if(strlen(bericht) ==8)
-    {
+    //dit is een update van de potmeter van de muur
+    if(strlen(bericht) ==8){
         char temp[20];
-        strcpy(temp, bericht); //sla een copy bericht op in een tijdelijke buffer
-        server->stuurBericht(GeefFD(), temp); //Verstuur het bericht naar de socket die hoort bij de huidige Schemerlamp om uit te voeren en de status van de lamp bij te werken.
+        strcpy(temp, bericht);
+        //std::string TempWaardeLed(bericht);
+       // this->waardeLed = std::bitset<8>(TempWaardeLed).to_ulong();
+        //char* temp;
+        //temp[0] = 1;
+        //strcpy(temp + 1, TempWaardeLed.c_str());
+        server->stuurBericht(GeefFD(), temp);
     }
 }
-
-char *Schemerlamp::GeefData() //Niet geïmplementeerde functie van het teruggeven van gegevens.
+char *Schemerlamp::GeefData()
 {
     return nullptr;
 }

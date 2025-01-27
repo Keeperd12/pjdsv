@@ -9,22 +9,34 @@ void Deur::Update(char *bericht)
 {
     if (strcmp(bericht, "1") == 0)
     {
+        std::cout<< "De deur heeft ontvangen (deur open)" << std::endl;
+       //mary bewaking
         SetWaarde(1);
     }
     if (strcmp(bericht, "2") == 0)
     {
+        std::cout<< "De deur heeft ontvangen (deur sluiten)" << std::endl;
+       //mary bewaking
         SetWaarde(2);
+    }
+      if (strcmp(bericht, "3") == 0)
+    {
+        std::cout<< "De deur heeft ontvangen (deur openen)" << std::endl;
+       //mary bewaking
+        SetWaarde(3);
     }
     if (strcmp(bericht, "4") == 0)
     {
         SetWaarde(4);
+        //deur
     }
     if(strcmp(bericht, "5")== 0){
         std::cout<< "De deur heeft ontvangen dat het nacht is" << std::endl;
         SetWaarde(5);
+        //muur
     }
     if(strcmp(bericht, "6")== 0){
-        std::cout<< "De deur heeft ontvangen dat het nacht is" << std::endl;
+        std::cout<< "De deur heeft ontvangen dat het dag is" << std::endl;
         SetWaarde(6);
     }
     moetIkIetsDoen(bericht);
@@ -37,15 +49,27 @@ void Deur::moetIkIetsDoen(char *bericht)
     {
         char temp[20];
         temp[0] = '1';
-        temp[1] = '\0';
+        temp[1] = '1';
+        temp[2] = '\0';
         std::cout << temp << std::endl;
         server->stuurBericht(GeefFD(), temp);
     }
     if (this->Button == 2)
     {
         char temp[20];
-        temp[0] = '2';
-        temp[1] = '\0';
+        temp[0] = '1';
+        temp[1] = '2';
+        temp[2] = '\0';
+        std::cout << temp << std::endl;
+        server->stuurBericht(GeefFD(), temp);
+    }
+     if (this->Button == 3)
+    {
+
+        char temp[20];
+        temp[0] = '0';
+        temp[1] = '3';
+        temp[2] = '\0';
         std::cout << temp << std::endl;
         server->stuurBericht(GeefFD(), temp);
     }
@@ -53,23 +77,27 @@ void Deur::moetIkIetsDoen(char *bericht)
     {
 
         char temp[20];
-        temp[0] = '4';
-        temp[1] = '\0';
+        temp[0] = '0';
+        temp[1] = '4';
+        temp[2] = '\0';
         std::cout << temp << std::endl;
         server->stuurBericht(GeefFD(), temp);
     }
     if(this->Button ==5){
         char temp[20];
-        temp[0] = '5';
-        temp[1] = '\0';
+        temp[0] = '1';
+        temp[1] = '5';
+        temp[2] = '\0';
         server->stuurBericht(GeefFD(), temp);
     }
     if(this->Button ==6){
         char temp[20];
-        temp[0] = '6';
-        temp[1] = '\0';
+        temp[0] = '1';
+        temp[1] = '6';
+        temp[2] = '\0';
         server->stuurBericht(GeefFD(), temp);
     }
+
 }
 
 char *Deur::GeefData()
@@ -81,12 +109,6 @@ char *Deur::GeefData()
     //  strcpy(data, combined.c_str()); // Copy combined string to data
     //  std::cout << "De data van de muur is: " << data << std::endl;
     return "1";
-}
-
-int Deur::GetValueButton() const
-{
-    return Button;
-    // server->stuurBericht(GeefType(), "test");
 }
 
 void Deur::SetWaarde(int Waarde)

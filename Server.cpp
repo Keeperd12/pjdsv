@@ -133,16 +133,7 @@ void Server::VerwerkDataBewaking(Client *client, char *message)
     int waarde;
     std::cout << message << "\n";
     Bewaking *bewaking = dynamic_cast<Bewaking *>(client);
-    /*if (strcmp(message, "h") == 0)
-    {
-        waarde = 1;
-        if (mary)
-        {
-            // zuil->SetButton(message);
 
-            mary->SetHulpStatus(waarde);
-        }
-    }*/
     if (strcmp(message, "d") == 0)
     {
         std::cout << "deur open" << std::endl;
@@ -220,34 +211,18 @@ void Server::stuurBericht(int fd, char *message)
 }
 void Server::VerwerkDataMary(Client *client, char *message)
 {
-
-    int waarde;
     Mary *mary = dynamic_cast<Mary *>(client);
     if (strcmp(message, "h") == 0)
     {
-        waarde = 1;
-        if (mary)
-        {
-            // zuil->SetButton(message);
-
-            mary->SetHulpStatus(waarde);
-        }
+        mary->HulpZuil(MapTypeClients);
     }
     if (strcmp(message, "d") == 0)
     {
-        waarde = 1;
-        if (mary)
-        {
-            mary->SetDeurStatus(waarde);
-        }
+        mary->DeurOpen(MapTypeClients);
     }
     if (strcmp(message, "x") == 0)
     {
-        waarde = 0;
-        if (mary)
-        {
-            mary->SetDeurStatus(waarde);
-        }
+        mary->DeurDicht(MapTypeClients);
     }
     if (strcmp(message, "z") == 0)
     {
@@ -272,34 +247,6 @@ void Server::VerwerkDataMary(Client *client, char *message)
     if (strcmp(message, "l") == 0)
     {
         mary->MaryThuis(); // aanroepen van de functie LCD sluiten
-    }
-}
-
-/*void Server::VerwerkDataZuil(Client *client, char *message)
-{
-
-    stuurAck(client->GeefFD());
-    std::cout << message << "\n";
-    Zuil *zuil = dynamic_cast<Zuil *>(client);
-    if (zuil)
-    {
-        // zuil->SetButton(message);
-        int buttonValue = atoi(message); // Converteer string naar integer
-        zuil->SetWaarde(buttonValue);
-    }
-}*/
-
-void Server::VerwerkDataDeur(Client *client, char *message)
-{
-
-    stuurAck(client->GeefFD());
-    std::cout << message << "\n";
-    Deur *deur = dynamic_cast<Deur *>(client);
-    if (deur)
-    {
-        // zuil->SetButton(message);
-        int buttonValue = atoi(message); // Converteer string naar integer
-        deur->SetWaarde(buttonValue);
     }
 }
 
@@ -449,8 +396,6 @@ void Server::ServerLoop()
                             else
                             {
                                 VerwerkDataMary(client, message);
-                                // std::cout << " Waarde Hulp " << mary->GetHulpStatus() << std::endl;
-                                // std::cout << " Waarde Deur " << mary->GetDeurStatus() << std::endl;
                             }
                         }
                         if (type == 6)
@@ -460,37 +405,10 @@ void Server::ServerLoop()
                         }
                     }
                 }
-                /// {
-                /*
-                     message[valread] = '\0';
-                     std::cout << "message from client: " << sd << " lengte valread van buffer is: " << valread << "  " << message << "\n";
-                     stuurAck(sd);
-
-                      * handle the message in new thread
-                      * so that we can listen to other client
-                      * in the main thread
-                      * std::thread t1(handleMessage, client, message);
-                      * // detach the thread so that it can run independently
-                      * t1.detach();
-                      */
-                // }
             }
         }
     }
 }
-/*void Server::VerwerkDataZuil(Client *client, char *message)
-{
-
-    stuurAck(client->GeefFD());
-    std::cout << message << "\n";
-    Zuil *zuil = dynamic_cast<Zuil *>(client);
-    if (zuil)
-    {
-        // zuil->SetButton(message);
-        int buttonValue = atoi(message); // Converteer string naar integer
-        zuil->SetWaarde(buttonValue);
-    }
-}*/
 
 void Server::ServerSetup()
 {

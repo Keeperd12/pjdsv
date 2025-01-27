@@ -12,15 +12,15 @@ public:
 	virtual void Update(char*);
 	virtual void MoetIkIetsDoen(char*);
 	virtual char* GeefData();
-	void SetWaarde(int Waarde);
-	int GetValueButton() const;
-	int GetValueBrandmelder() const;
 
 private:
     unsigned int Button;
 	unsigned int Brandmelder;
 	unsigned int StatusZoemer;
 	unsigned int StatusLed;
+	unsigned int HulpMary;
+	char *BewakingHulp = "Bewoner Mary heeft hulp nodig";
+	char *BewakingBrand = "Brand bij Bewoner Mary!";
 
 };
 

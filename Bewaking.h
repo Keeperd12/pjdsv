@@ -19,5 +19,4 @@ public:
     void DeurDicht(const std::map<int, Client*>& MapTypeClients);
 	
 private:
-
 };

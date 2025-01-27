@@ -10,7 +10,7 @@ Bewaking::~Bewaking() {}
 
 void Bewaking::Update(char *message)
 {
-    std::cout << "message from client: " << std::endl;
+    std::cout << "client stuurt message" << std::endl;
 }
 
 char *Bewaking::GeefData()
@@ -46,3 +46,4 @@ void Bewaking::DeurDicht(const std::map<int, Client *> &MapTypeClients)
         }
     }
 }
+

@@ -94,6 +94,7 @@ void Mary::DeurOpen(const std::map<int, Client*>& MapTypeClients)
       }
    }
 }
+
 void Mary::DeurDicht(const std::map<int, Client*>& MapTypeClients)
 {
    std::cout << "Deur dicht" << std::endl;
@@ -124,4 +125,17 @@ void Mary::MaryThuis()
 }
 int Mary::isMaryThuis(){
    return MaryIsThuis;
+}
+
+void Mary::HulpZuil(const std::map<int, Client*>& MapTypeClients){
+for (auto it = MapTypeClients.begin(); it != MapTypeClients.end(); it++)
+   {
+      if (it->second->GeefType() == 4)
+      {
+         std::cout << "Zuil gevonden" << std::endl;
+         //std::cout << it->second->GeefData() << std::endl;
+         it->second->Update("1");
+         //it->second->Update("11111111111111111111");
+      }
+   }
 }

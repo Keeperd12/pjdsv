@@ -30,9 +30,9 @@ public:
     //alles met betrekking tot de deur
     void DeurOpen(const std::map<int, Client*>& MapTypeClients);
     void DeurDicht(const std::map<int, Client*>& MapTypeClients);
-
-    void SetHulpStatus(int Waarde){};
-    void SetDeurStatus(int Waarde){};
+    
+    //Zuil
+    void HulpZuil(const std::map<int, Client*>& MapTypeClients);
 
 private:
     int MaryIsThuis=1; // de variabel die gezet wordt om te kijken of Mary thuis, ze is standaard
