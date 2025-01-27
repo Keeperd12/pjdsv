@@ -165,7 +165,7 @@ void Muur::UpdateDoor()
         }
     }
 }
-
+//functie voor het evt kunnen syncen van alle muren
 void Muur::updateMuur(){
     for (auto it = server->GeefPointerMap().begin(); it != server->GeefPointerMap().end(); it++)
     {
