@@ -115,23 +115,20 @@ char *Muur::GeefData()
     std::unique_ptr<char[]> data(new char[combined.size() + 1]); //maakt ruimte voor een nieuwe char met de lengte van combined
     strcpy(data.get(), combined.c_str()); // kopieer de string naar de char array
 
-    return data.release(); // geef de pointer terug en release data (maak ruwe pointer, zodat de functie de pointer kan delete)
+    return data.release(); // geef de functie die de pointer ontvangt "ownership" en laat deze die zelf deleten
 }
 
 void Muur::UpdateSchemerlamp()
 {
     std::bitset<8> binaryStatusLED(StatusLED); //converteer statusLed naar binar
     std::string str1 = binaryStatusLED.to_string(); //zet binair in string
-    char *data = new char[str1.size()+1]; //maak ruimte voor een nieuwe char met de lengte van str1
-    strcpy(data, str1.c_str());   //kopieer de string naar de char array
     for (auto it = server->GeefPointerMap().begin(); it != server->GeefPointerMap().end(); it++)
     {
         if (it->second->GeefType() == 2) // is het object een type schemerlamp?
         {
-            it->second->Update(data); // verstuur de helderheid waarde naar de klasse schemerlamp
+            it->second->Update(str1.c_str()); //geef direct de string mee
         }
     }
-    delete data;
 }
 void Muur::UpdateDoor()
 {
@@ -159,13 +156,4 @@ void Muur::UpdateDoor()
         }
     }
 }
-//functie voor het evt kunnen syncen van alle muren
-void Muur::updateMuur(){
-    for (auto it = server->GeefPointerMap().begin(); it != server->GeefPointerMap().end(); it++)
-    {
-        if (it->second->GeefType() == 1) // is het object een type schemerlamp?
-        {
-            //it->second->Update // verstuur de helderheid waarde naar de klasse schemerlamp
-        }
-    }
-}
+
