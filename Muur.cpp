@@ -122,7 +122,8 @@ void Muur::UpdateSchemerlamp()
 {
     std::bitset<8> binaryStatusLED(StatusLED); //converteer statusLed naar binar
     std::string str1 = binaryStatusLED.to_string(); //zet binair in string
-    char *data = new char[str1.size()+1]; //reserveer char arrar met lengte van str1 + 1 voor de null terminator
+    char *data = new char[12]; //reserveer
+    strcpy(data, str1.c_str());
     for (auto it = server->GeefPointerMap().begin(); it != server->GeefPointerMap().end(); it++)
     {
         if (it->second->GeefType() == 2) // is het object een type schemerlamp?
@@ -130,7 +131,7 @@ void Muur::UpdateSchemerlamp()
             it->second->Update(data); //geef direct de string mee
         }
     }
-    delete data; //geef weer vrij
+    delete[] data; //geef weer vrij
 }
 void Muur::UpdateDoor()
 {
