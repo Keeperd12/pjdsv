@@ -1,7 +1,5 @@
 #include "Muur.h"
 #include <iostream>
-// #include <stdlib.h>
-// #include <stdio.h>
 #include <bitset>
 #include "Server.h"
 #include <string>
@@ -14,123 +12,118 @@ void Muur::Update(char *bericht)
     // deze instructie is wanneer het bericht van de muur (wemos) komt
     if (strlen(bericht) == 20)
     {
-
+        //isoleer eerste 10 bits en zet om naar een int in statusLDR
         std::string LDRDeel(bericht, 10);
         this->StatusLDR = std::bitset<10>(LDRDeel).to_ulong();
-
+        //isoleer de laatste 10 bits en zet om naar een int in StatusPotmeter
         std::string PotDeel(bericht + 10, 10);
         this->StatusPotmeter = std::bitset<10>(PotDeel).to_ulong();
 
-        // reken de status potmeter om naar de waarde statusLed (0-255)
+        // reken de status potmeter om naar de genormaliseerde waarde statusLed (0-255)
         this->StatusLED = (StatusPotmeter * 255) / 1023;
+        
         moetIkIetsDoen(bericht);
     }
     // deze instructie is om de LCD aan te sturen
     if (strlen(bericht) == 1)
     {
-
         if (bericht[0] == '1')
         {
-            this->StatusLCD = 1;
-            std::bitset<8> binaryStatusLED(StatusLED); // Convert to binary
-            std::string str1 = binaryStatusLED.to_string();
-            char temp[20];
-            temp[0] = '1'; // bericht voor wemos nog ack terugsturen
-            temp[1] = bericht[0];
-            strcpy(temp + 2, str1.c_str());
-            server->stuurBericht(GeefFD(), temp);
+            this->StatusLCD = 1; //statusLCD variabel update
+            std::bitset<8> binaryStatusLED(StatusLED); // converteer naar binair
+            std::string str1 = binaryStatusLED.to_string(); //zet binair naar een string
+            char temp[20]; //tijdelijke char om te vertsturen
+            temp[0] = '1'; // bericht voor wemos nog ack terugsturen want mary.
+            temp[1] = bericht[0]; //bericht voor wemos gewenste stand lcd
+            strcpy(temp + 2, str1.c_str()); //kopieer binair naar temp vanaf [2]
+            server->stuurBericht(GeefFD(), temp); //verstuur data in juist formaat 
         }
         if (bericht[0] == '0')
         {
-            this->StatusLCD = 0;
-            std::bitset<8> binaryStatusLED(StatusLED); // Convert to binary
-            std::string str1 = binaryStatusLED.to_string();
-            char temp[20];
+            this->StatusLCD = 0; //statusLCD variabel update
+            std::bitset<8> binaryStatusLED(StatusLED);//converteer naar binair
+            std::string str1 = binaryStatusLED.to_string(); //zet binair in een string
+            char temp[20]; //tijdelijke char om te vertsturen
             temp[0] = '1'; // bericht voor wemos nog ack terugsturen
-            temp[1] = bericht[0];
-            strcpy(temp + 2, str1.c_str());
-            server->stuurBericht(GeefFD(), temp);
+            temp[1] = bericht[0]; //bericht voor wemos gewenste stand lcd
+            strcpy(temp + 2, str1.c_str()); //kopieer binair naar temp vanaf [2]
+            server->stuurBericht(GeefFD(), temp); //verstuur data in juist formaat 
         }
     }
-    // deze instructie is om de LED helderheid aan te sturen vanaf terminal marry
+    //instructie van mary om led strip naar sfeer stand te zetten
     if (strlen(bericht) == 2)
     {
-        // update de waarde van de LED strip
-        this->StatusLED = std::stoi(bericht);
-
-        std::bitset<8> binaryStatusLED(StatusLED); // Convert to binary
-        std::string str1 = binaryStatusLED.to_string();
-        char temp[20];
+        this->StatusLED = std::stoi(bericht);// update de waarde van de LED strip gebruik stoi (string to integer)
+        std::bitset<8> binaryStatusLED(StatusLED); // Converteer naar binair
+        std::string str1 = binaryStatusLED.to_string(); //zet binair in een string
+        char temp[20]; //tijdelijke char om te versturen
         temp[0] = '1'; // bericht voor wemos nog ack terugsturen
+
+        //kijk of het dag of nacht is
         if (StatusLDR >= 300)
         {
-            // het is dag venster open
-            temp[1] = '1';
+            temp[1] = '1'; // het is dag venster open
         }
         else
         {
-            // het is nacht venster dicht
-            temp[1] = '0';
+            temp[1] = '0'; // het is nacht venster dicht
         }
-        strcpy(temp + 2, str1.c_str());
-        server->stuurBericht(GeefFD(), temp);
+        strcpy(temp + 2, str1.c_str()); //kopieer binair naar temp vanaf [2]
+        server->stuurBericht(GeefFD(), temp); //verstuur data in juist formaat
     }
-    //sync de schemerlamp LED
+    //synchroniseer de schemerlamp altijd met de LEDHelderheid
     UpdateSchemerlamp();
-    //geef door of het dag of nacht is aan de deur
+    //update alle deuren of het nacht of dag is
     UpdateDoor();
 }
 void Muur::moetIkIetsDoen(char *bericht)
 {
+    std::bitset<8> binaryStatusLED(StatusLED); //converteer statusLED naar binair
+    std::string str1 = binaryStatusLED.to_string(); //zet binair in string
+    std::string str2; //initaliseer een string voor waarde dag of nacht
 
-    std::bitset<8> binaryStatusLED(StatusLED);
-    std::string str1 = binaryStatusLED.to_string();
-
-    std::string str2;
-    if (StatusLDR >= 300)
+    //check of dag of nacht is
+    if (StatusLDR >= 300) //het is dag
     {
-        std::cout << "het is dag" << std::endl;
-        str2 = "1";
-        this->StatusLCD = 1;
+        str2 = "1"; //waarde 1: venster open
+        this->StatusLCD = 1; //update variabel StatusLCD
     }
-    else
+    else //het is geen dag, maar nacht
     {
-        std::cout << "het is nacht" << std::endl;
-        str2 = "0";
-        this->StatusLCD = 0;
+        str2 = "0"; //waarde 0: venster dicht
+        this->StatusLCD = 0; //update variabel StatusLCD
     }
 
-    char temp[20];
-    temp[0] = '0';
-    temp[1] = str2[0];
-    strcpy(temp + 2, str1.c_str());
+    char temp[20]; //initiseer tijdelijke char om juiste formaat in te kunnen zenden
+    temp[0] = '0'; //bericht is een reactie
+    temp[1] = str2[0]; //data voor aansturen lcd
+    strcpy(temp + 2, str1.c_str()); 
 
-    server->stuurBericht(GeefFD(), temp);
+    server->stuurBericht(GeefFD(), temp); //verstuur data in juist formaat
 }
 
 char *Muur::GeefData()
 {
-    // converteer alle int naar een string
+    // converteer alle int statussen naar een string
     std::string str0 = std::to_string(StatusPotmeter);
     std::string str1 = std::to_string(StatusLED);
     std::string str2 = std::to_string(StatusLDR);
     std::string str3 = std::to_string(StatusLCD);
-    // combineer de strings
+    // combineer alle strings in een
     std::string combined = "\r\nMuur Potmeter= " + str0 + ", LDR: " + str2 + " waarde helderheid LED strip: " + str1 + " Status LCD=  " + str3 + "\r\n";
     // unique smart pointer aanmaken voor de char array
-    std::unique_ptr<char[]> data(new char[combined.size() + 1]); //+1 voor \0
-    strcpy(data.get(), combined.c_str());                        // kopieer de string naar de char array
+    std::unique_ptr<char[]> data(new char[combined.size() + 1]); //maakt ruimte voor een nieuwe char met de lengte van combined
+    strcpy(data.get(), combined.c_str()); // kopieer de string naar de char array
 
-    return data.release(); // geef de pointer terug en release data
+    return data.release(); // geef de pointer terug en release data (maak ruwe pointer, zodat de functie de pointer kan delete)
 }
 
 void Muur::UpdateSchemerlamp()
 {
-    std::cout << "UpdateSchemerlamp" << std::endl;
-    std::bitset<8> binaryStatusLED(StatusLED);
-    std::string str1 = binaryStatusLED.to_string();
-    char *data = new char[50];
-    strcpy(data, str1.c_str());
+    std::bitset<8> binaryStatusLED(StatusLED); //converteer statusLed naar binar
+    std::string str1 = binaryStatusLED.to_string(); //zet binair in string
+    char *data = new char[str1.size()+1]; //maak ruimte voor een nieuwe char met de lengte van str1
+    strcpy(data, str1.c_str());   //kopieer de string naar de char array
     for (auto it = server->GeefPointerMap().begin(); it != server->GeefPointerMap().end(); it++)
     {
         if (it->second->GeefType() == 2) // is het object een type schemerlamp?
@@ -138,6 +131,7 @@ void Muur::UpdateSchemerlamp()
             it->second->Update(data); // verstuur de helderheid waarde naar de klasse schemerlamp
         }
     }
+    delete data;
 }
 void Muur::UpdateDoor()
 {
