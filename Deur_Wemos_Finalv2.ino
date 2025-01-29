@@ -357,7 +357,7 @@ void DataCheck() {
     }
 
     if (message.charAt(1) == '3') {
-      
+      Deur2();
     }
 
     if (message.charAt(1) == '4') {
@@ -365,18 +365,18 @@ void DataCheck() {
       blinking();
     }
 
-    if (message.charAt(1) == '5') {
+    if (message.charAt(1) == '6') {
       Wire.beginTransmission(I2C_ADDRESS);
       Wire.write(byte(0x01)); // Output register
-      Wire.write(byte(1 << 4 )); // Zet LEDs aan
+      Wire.write(byte(1 << 4 )); // Zet LEDs uit
       Serial.print("Het is nu Dag modus");
       Wire.endTransmission();
 
     }
-    if (message.charAt(1) == '6') {
+    if (message.charAt(1) == '5') {
       Wire.beginTransmission(I2C_ADDRESS);
       Wire.write(byte(0x01)); // Output register
-      Wire.write(byte(0 << 4)); // Zet LEDs uit
+      Wire.write(byte(0)); // Zet LEDs uit
       Wire.endTransmission();
      // Serial.print("Het is nu Nachtmodus modus");
 
@@ -462,7 +462,7 @@ void blinking() {
 
    stopBlinking = false;
   unsigned long blinkStartTime = millis(); // Begin tijd bijhouden
-  const unsigned long blinkDuration = 5000; // Max knipperduur, bijv. 5 seconden
+  const unsigned long blinkDuration = 8000; // Max knipperduur, bijv. 5 seconden
 
   while (!stopBlinking) {
     unsigned long currentMillis = millis();
@@ -494,16 +494,16 @@ void blinking() {
       myServo.write(70);
     }
     if (message.charAt(1) == '3') {
-      Deur2();
+      
     }
-    if (message.charAt(1) == '5') {
+    if (message.charAt(1) == '6') {
       Wire.beginTransmission(I2C_ADDRESS);
       Wire.write(byte(0x01)); // Output register
-      Wire.write(byte(1 << 5 )); // Zet LEDs aan
+      Wire.write(byte(1 << 4 )); // Zet LEDs aan
    //   Serial.print("Het is nu nacht modus");
       Wire.endTransmission();
     }
-    if (message.charAt(1) == '6') {
+    if (message.charAt(1) == '5') {
       Wire.beginTransmission(I2C_ADDRESS);
       Wire.write(byte(0x01)); // Output register
       Wire.write(byte(0)); // Zet LEDs uit
