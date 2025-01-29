@@ -3,149 +3,170 @@
 #include <Wire.h>
 #include <FastLED.h>
 
-#define I2C_SDL D1    //klok lijn
-#define I2C_SDA D2    // data lijn
-#define NUM_LEDS 3    //ledfast
-#define DATA_PIN D5   //ledfast
-CRGB leds[NUM_LEDS];  //ledfast
+#define I2C_SDL D1    // Kloklijn voor I2C communicatie
+#define I2C_SDA D2    // Datallijn voor I2C communicatie
+#define NUM_LEDS 3    // Aantal LEDs in de strip
+#define DATA_PIN D5   // Pin voor de LED-strip (FastLED)
+CRGB leds[NUM_LEDS];  // Array voor de LEDs in de strip
 
 #ifndef STASSID
-#define STASSID "PiVanOli4"
-#define STAPSK "WachtwoordPiVanOli4"
+#define STASSID "PiVanOli4"  // WiFi SSID
+#define STAPSK "WachtwoordPiVanOli4"  // WiFi wachtwoord
 #endif
 
+const char* ssid = STASSID;  // WiFi netwerknaam
+const char* password = STAPSK;  // WiFi wachtwoord
+const uint16_t port = 8080;  // Poort waarop de server luistert
+const char* host = "Server Pi van Oli4";  // Serverhost
+IPAddress local_Ip(192, 168, 10, 99);  // Statische IP voor dit apparaat
+IPAddress gateway(192, 168, 10, 1);  // Gateway IP
+IPAddress subnet(255, 255, 255, 0);  // Subnetmasker
 
-const char* ssid = STASSID;
-const char* password = STAPSK;
-const uint16_t port = 8080;
-const char* host = "Server Pi van Oli4";
-IPAddress local_Ip(192, 168, 10, 99);  //wanneer de pi dhcp zou hebben zou dit niet nodig zijn en is de code helemaal identiek op beide wemossen
-IPAddress gateway(192, 168, 10, 1);
-IPAddress subnet(255, 255, 255, 0);
-
+// Variabelen voor het lezen van analoge inputs
 volatile unsigned int Pot = 0;
 volatile unsigned int Ldr = 0;
 volatile unsigned int anin0 = 0;
 volatile unsigned int anin1 = 0;
 
-WiFiClient client;
+WiFiClient client;  // Clientobject voor de netwerkverbinding
 
 void setup() {
-  FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
-  Wire.begin();          //enable de i2c communicatie
-  Serial.begin(115200);  //begin seriele communicatie
+  FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);  // Initialiseert de LED-strip
+  Wire.begin();  // Start I2C-communicatie
+  Serial.begin(115200);  // Start seriële communicatie op 115200 baud
 
-  setupLED();            //init led
-  setupLDRPotentio();    //init LDR en Potentiometer
+  setupLED();  // Initialiseer LED (instellen van kleuren of effecten)
+  setupLDRPotentio();  // Initialiseer de LDR en potentiometer
 
-  //verbind met het netwerk
+  // Verbind met WiFi-netwerk
   Serial.print("Connecting to ");
   Serial.println(ssid);
-  WiFi.mode(WIFI_STA);
-  WiFi.config(local_Ip, gateway, subnet);
-  WiFi.begin(ssid, password);
+  WiFi.mode(WIFI_STA);  // Zet de WiFi-modus op Station (client)
+  WiFi.config(local_Ip, gateway, subnet);  // Stel statisch IP in
+  WiFi.begin(ssid, password);  // Verbind met WiFi netwerk
 
-  //wacht totdat verbonden met het netwerk
+  // Wacht totdat de verbinding tot stand is gebracht
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print(".");
+    Serial.print(".");  // Geef aan dat er gewacht wordt
   }
-  Serial.println("\nVerbonden met netwerk!");
-  LED(255, 255, 255); //LED blauw
-  updateOudeWaardes(); //eenmalig
-  setupLCD(); // initalisatie van de LCD
+  Serial.println("\nVerbonden met netwerk!");  // Geef aan dat de verbinding succesvol is
+  LED(255, 255, 255);  // Zet de LED op blauw
+  updateOudeWaardes();  // Update de oude waarden van sensoren
+  setupLCD();  // Initialiseer de LCD-scherm
 }
 
 void loop(void) {
-  String message = "";
-  //verbind met de socket
+  String message = "";  // Variabele om berichten op te slaan
+
+  // Verbind met de server via de socket
   if (!client.connected()) {
     Serial.print("connecting to ");
     Serial.print(host);
     Serial.print(':');
     Serial.println(port);
     delay(500);
-    client.connect(gateway, 8080);
+    client.connect(gateway, 8080);  // Maak verbinding met de server via het IP en poort
     if (client.connected()) {
-  
-      while (!client.available()) {   //wacht oneindig totdat er een bericht ontvangen wordt
+
+      // Wacht op de server om zichzelf te identificeren
+      while (!client.available()) {
         Serial.println("Wachten tot start teken: Identificeer jezelf van de server");
         delay(500);
-      }  
-      
-      while (client.available()) {
-        char c = client.read();  // Lees een karakter
-        message += c;            // Voeg het toe aan de buffer
       }
-      
-      client.print("Muur"); //laat weten wat voor type device je bent
+
+      // Lees de ontvangen boodschap van de server
+      while (client.available()) {
+        char c = client.read();  // Lees een karakter van de server
+        message += c;  // Voeg het toe aan de message string
+      }
+
+      client.print("Muur");  // Geef aan dat dit apparaat een muur is
       while (!client.available()) {
         Serial.println("Wachten op ACK (of de identificatie is gelukt)");
-        delay(500);
-      }  //wacht oneindig tot dat er een bericht ontvangen wordt
+        delay(500);  // Wacht totdat een ACK ontvangen wordt
+      }
+
       message = "";
       while (client.available()) {
-        char c = client.read();  // Lees een karakter
-        message += c;            // Voeg het toe aan de buffer
+        char c = client.read();  // Lees de server respons
+        message += c;  // Voeg het toe aan de message string
       }
+
       if (message == "ACK") {
-        Serial.println("Server heeft correct ontvangen, identificatie gelukt!");
+        Serial.println("Server heeft correct ontvangen, identificatie gelukt!");  // Bevestiging van succesvolle identificatie
       }
     }
   }
 
+  // Voer acties uit zolang de client verbonden is
   while (client.connected()) {
-    delay(50);
+    delay(50);  // Kleine vertraging om de server niet te overladen
 
+    // Controleer of er een bericht van de server beschikbaar is
     if (client.available()) {
       message = "";
       while (client.available()) {
-        char c = client.read();  // Lees een karakter
-        message += c;            // Voeg het toe aan de buffer
+        char c = client.read();  // Lees een karakter van de server
+        message += c;  // Voeg het toe aan de message string
       }
+
+      // Als het eerste karakter '1' is, stuur een "ACK" terug naar de server
       if (message[0] == '1') {
-        Serial.println("deze message is ge initiseerd door de server, dus nog een ack sturen");
+        Serial.println("Deze message is geinitieerd door de server, dus nog een ACK sturen");
         client.write("ACK");
       }
+
+      // Als het eerste karakter '0' is, geef een reactie weer
       if (message[0] == '0') {
         Serial.println("Dit bericht is een reactie op een zelf verzonden bericht");
       }
-      char LCDchar = message[1]; //index bit 1 voor LCD
-      char* binaryString = &message[2]; //vanaf index bit 2 de waarde (0-255) voor de LED-helderheid
-      uint8_t helderHeid = (uint8_t)strtol(binaryString, NULL, 2); //omzetten naar uint8_t
 
-      dimLed(helderHeid); //dim de LED strip met de waarde
+      // Verkrijg de tweede karakter voor de LCD-besturing
+      char LCDchar = message[1];  // Het tweede karakter voor LCD
+      char* binaryString = &message[2];  // Start bij het derde karakter voor de LED helderheid (binair)
+      uint8_t helderHeid = (uint8_t)strtol(binaryString, NULL, 2);  // Zet de binaire string om naar een uint8_t waarde
 
-      if (LCDchar == '0') { //LCD aansturen
-        SluitLCD();
+      dimLed(helderHeid);  // Dim de LED-strip op basis van de helderheid
+
+      // Besturing voor het aansteken of uitschakelen van het LCD
+      if (LCDchar == '0') {
+        SluitLCD();  // Sluit LCD
       }
-      if (LCDchar == '1') { //LCD aansturen
-        OpenLCD();
+      if (LCDchar == '1') {
+        OpenLCD();  // Open LCD
       }
-      client.flush();
+      client.flush();  // Zorg ervoor dat alle berichten worden verzonden
     }
-    //is er verandering en staat er geen bericht om eerst uit te lezen?
-    updateNieuweWaardes();
-    //Serial.println("Waardes geupdate!");
+
+    // Controleer of er veranderingen zijn in de sensorwaarden
+    updateNieuweWaardes();  // Update de nieuwe waarden van de sensoren
+
+    // Als er veranderingen zijn en er geen bericht is om te verwerken, stuur de nieuwe waarden naar de server
     if (verandering() && !client.available()) {
       Serial.println("De data is gewijzigd");
-      client.print(leesGecombineerd());
-      //nu wachten op een ack van de server
+      client.print(leesGecombineerd());  // Stuur de gecombineerde waarden naar de server
+
+      // Wacht op een bevestiging van de server
       while (!client.available()) {
         Serial.println("Aan het wachten op een ACK bericht van de server");
         delay(25);
       }
+
+      // Lees het bevestigingsbericht van de server
       message = "";
       while (client.available()) {
-        char c = client.read();  // Lees een karakter
-        message += c;
+        char c = client.read();  // Lees een karakter van de server
+        message += c;  // Voeg het toe aan de message string
       }
-      // wacht op de data die geretouneerd wordt
+
+      // Verstuur een ACK bericht naar de server om ontvangst te bevestigen
       message = "";
       client.write("ACK");
     }
   }
 }
+
 int verandering() {
   if(abs((int)(anin1 - Pot)) > 5) {  //is het verschil groter dan 5?
     Pot = anin1;
@@ -160,45 +181,54 @@ int verandering() {
   return 0;  //geef 0 terug -> er is geen verandering
 }
 
-void setupLDRPotentio() {
-  Wire.beginTransmission(0x36);  //start i2c communicatie omzetter
-  Wire.write(byte(0xA2));        //Schrijf naar een register om de MAX11647 in te stellen.
-  Wire.write(byte(0x03));        //Schrijf een waarde om de MAX11647 te configureren
-  Wire.endTransmission();        //beindig de transmissie
-}
+// Functie om de LED op pin D5 in te stellen als output
 void setupLED() {
-  pinMode(D5, OUTPUT);           //zet D5 (pint) op output voor LED-strip
+  pinMode(D5, OUTPUT);  // Zet pin D5 in de output-modus voor de LED-strip
 }
+
+// Functie om de LED-strip in een specifieke kleur in te stellen
+// De waarden R, G, B vertegenwoordigen respectievelijk de rode, groene en blauwe kleurcomponenten
 void LED(int R, int G, int B) {
-  leds[0] = (R, G, B);
-  FastLED.show();
-  leds[1] = (R, G, B);
-  FastLED.show();
-  leds[2] = (R, G, B);
-  FastLED.show();
+  leds[0] = (R, G, B);  // Zet de eerste LED naar de opgegeven kleur
+  FastLED.show();       // Update de LED-strip om de wijziging zichtbaar te maken
+  leds[1] = (R, G, B);  // Zet de tweede LED naar dezelfde kleur
+  FastLED.show();       // Update opnieuw om de wijziging zichtbaar te maken
+  leds[2] = (R, G, B);  // Zet de derde LED naar dezelfde kleur
+  FastLED.show();       // Update de LED-strip voor de laatste wijziging
 }
+
+// Functie om de helderheid van de LED-strip langzaam aan te passen
+// De helderheid wordt ingesteld op de waarde x
 void dimLed(uint16_t x) {
+  // Als de huidige helderheid groter is dan de gewenste helderheid, verlaag de helderheid
   if (FastLED.getBrightness() > x) {
+    // Terwijl de huidige helderheid niet gelijk is aan de gewenste waarde, verlaag je de helderheid
     while (x != FastLED.getBrightness()) {
-      FastLED.setBrightness(FastLED.getBrightness() - 1);
-      FastLED.show();
-      delay(3);
+      FastLED.setBrightness(FastLED.getBrightness() - 1);  // Verlaag de helderheid
+      FastLED.show();  // Update de LED-strip om de nieuwe helderheid weer te geven
+      delay(3);         // Kleine vertraging om het dimmen soepel te maken
     }
   }
+  
+  // Als de huidige helderheid kleiner is dan de gewenste helderheid, verhoog de helderheid
   if (FastLED.getBrightness() < x) {
+    // Terwijl de huidige helderheid niet gelijk is aan de gewenste waarde, verhoog je de helderheid
     while (x != FastLED.getBrightness()) {
-      FastLED.setBrightness(FastLED.getBrightness() + 1);
-      FastLED.show();
-      delay(3);
+      FastLED.setBrightness(FastLED.getBrightness() + 1);  // Verhoog de helderheid
+      FastLED.show();  // Update de LED-strip om de nieuwe helderheid weer te geven
+      delay(3);         // Kleine vertraging om het dimmen soepel te maken
     }
   }
 }
+
+// Functie om de helderheid van de LED-strip onmiddellijk in te stellen op een waarde x
 void DimLedInstant(uint8_t x) {
-  FastLED.setBrightness(x);
-  Serial.print("Zet de LED op: ");
-  Serial.println(x);
-  FastLED.show();
+  FastLED.setBrightness(x);  // Zet de helderheid onmiddellijk naar de opgegeven waarde
+  Serial.print("Zet de LED op: ");  // Print een bericht naar de seriële monitor
+  Serial.println(x);  // Print de nieuwe helderheidswaarde
+  FastLED.show();  // Update de LED-strip met de nieuwe helderheid
 }
+
 //functie voor het update van de nieuwe waarde (herhaaldelijk elke loop 1x aanroepen)
 void updateNieuweWaardes() {
   Wire.requestFrom(0x36, 4);                        // Vraag 4 bytes aan van de MAX11647 (2 analoge ingangen)
